@@ -28,54 +28,59 @@ def get_delta(x):
 
 class Weather(object):
     def __init__(self, path, window_size, sub_delta, dst_hour, dst_minutes, norm_hour, norm_minutes) -> None:
-        self.path = path
-        self.window_size = window_size
-        self.sub_delta = sub_delta
-        self.merge_df = None
-        self.dst_hour = dst_hour
-        self.dst_minutes = dst_minutes
-        self.norm_hour = norm_hour
-        self.norm_minutes = norm_minutes
+        self._path = path
+        self._window_size = window_size
+        self._sub_delta = sub_delta
+        self._df = None
+        self._dst_hour = dst_hour
+        self._dst_minutes = dst_minutes
+        self._norm_hour = norm_hour
+        self._norm_minutes = norm_minutes
 
     def load_data(self, start_date):
-        self.data = pd.read_csv(self.path, sep=',', na_values=['-'])
-        self.set_init_hour()
-        self.start_date = start_date
+        self._data = pd.read_csv(self._path, sep=',', na_values=['-'])
+        self._set_init_hour()
+        self._start_date = start_date
         return self
 
-    def set_init_hour(self):
-        self.data['INIT_HOUR'] = (
+    def _set_init_hour(self):
+        self._data['INIT_HOUR'] = (
             np.select(
-                condlist=[self.data['INIT_HOUR'] == 0, self.data['INIT_HOUR'] ==
-                          6, self.data['INIT_HOUR'] == 12, self.data['INIT_HOUR'] == 18],
+                condlist=[self._data['INIT_HOUR'] == 0, self._data['INIT_HOUR'] ==
+                          6, self._data['INIT_HOUR'] == 12, self._data['INIT_HOUR'] == 18],
                 choicelist=["00:00:00", "06:00:00", "12:00:00", "18:00:00"],
                 default="00:00:00"))
         return self
 
-    def merge_data(self):
-        self.merge_df = self.data[["INIT_DATE", "INIT_HOUR", "VERIF_DATE", "PARAM", "VALUE",
-                                   "10Y_NORMAL"]].groupby(self.data["VALUE"].index // self.window_size).head(1)
-        self.merge_df["Sum_Sub_Value"] = self.data[["VALUE"]].groupby(
-            self.data["VALUE"].index // self.window_size).apply(lambda x: sum(x["VALUE"].values[self.sub_delta:])).values
-        self.merge_df["Sum_Sub_tail"] = self.data[["VALUE"]].groupby(
-            self.data["VALUE"].index // self.window_size).apply(lambda x: sum(x["VALUE"].values[(self.sub_delta+1):])).values
-        self.merge_df["Sum_Value"] = self.data[["VALUE"]].groupby(
-            self.data["VALUE"].index // self.window_size).sum().values
-        self.merge_df["10Y_NORMAL_LAST"] = self.data[["10Y_NORMAL"]].groupby(
-            self.data["10Y_NORMAL"].index // self.window_size).tail(1).values
-        self.merge_df["SUB_First"] = self.data[["VALUE"]].groupby(
-            self.data["VALUE"].index // self.window_size).apply(lambda x: x["VALUE"].values[self.sub_delta]).values
+    @property
+    def get_data(self):
+        return self._data
 
-        self.merge_df["INIT_Time"] = self.merge_df["INIT_DATE"] + \
-            " " + self.merge_df["INIT_HOUR"]
-        self.merge_df["INIT_Time"] = pd.to_datetime(
-            self.merge_df["INIT_Time"], format="%Y-%m-%d %H:%M:%S")
-        self.merge_df = self.merge_df[(
-            self.merge_df['INIT_Time'] >= self.start_date)]
-        self.merge_df["VALUE"] = self.merge_df["VALUE"].astype("float64")
+    @property
+    def merge_data(self):
+        window_grouper = self._data["VALUE"].index // self._window_size
+        self._df = self._data[["INIT_DATE", "INIT_HOUR", "VERIF_DATE", "PARAM", "VALUE",
+                               "10Y_NORMAL"]].groupby(window_grouper).head(1)
+        self._df["Sum_Sub_Value"] = self._data[["VALUE"]].groupby(window_grouper).apply(
+            lambda x: sum(x["VALUE"].values[self._sub_delta:])).values
+        self._df["Sum_Sub_tail"] = self._data[["VALUE"]].groupby(window_grouper).apply(
+            lambda x: sum(x["VALUE"].values[(self._sub_delta+1):])).values
+        self._df["Sum_Value"] = self._data[["VALUE"]
+                                           ].groupby(window_grouper).sum().values
+        self._df["10Y_NORMAL_LAST"] = self._data[[
+            "10Y_NORMAL"]].groupby(window_grouper).tail(1).values
+        self._df["SUB_First"] = self._data[["VALUE"]].groupby(window_grouper).apply(
+            lambda x: x["VALUE"].values[self._sub_delta]).values
+        self._df["INIT_Time"] = self._df["INIT_DATE"] + \
+            " " + self._df["INIT_HOUR"]
+        self._df["INIT_Time"] = pd.to_datetime(
+            self._df["INIT_Time"], format="%Y-%m-%d %H:%M:%S")
+        self._df = self._df[(
+            self._df['INIT_Time'] >= self._start_date)]
+        self._df["VALUE"] = self._df["VALUE"].astype("float64")
         return self
 
-    def trans_dst_helper(self, dt):
+    def _trans_dst_helper(self, dt):
         if (((dt >= datetime.strptime("2015-3-8", '%Y-%m-%d')) & (dt < datetime.strptime("2015-11-1", '%Y-%m-%d'))) |
             ((dt >= datetime.strptime("2016-3-13", '%Y-%m-%d')) & (dt < datetime.strptime("2016-11-6", '%Y-%m-%d'))) |
             ((dt >= datetime.strptime("2017-3-12", '%Y-%m-%d')) & (dt < datetime.strptime("2017-11-5", '%Y-%m-%d'))) |
@@ -83,18 +88,20 @@ class Weather(object):
             ((dt >= datetime.strptime("2019-3-10", '%Y-%m-%d')) & (dt < datetime.strptime("2019-11-3", '%Y-%m-%d'))) |
             ((dt >= datetime.strptime("2020-3-8", '%Y-%m-%d')) & (dt < datetime.strptime("2020-11-1", '%Y-%m-%d'))) |
                 ((dt >= datetime.strptime("2021-3-14", '%Y-%m-%d')) & (dt < datetime.strptime("2021-11-7", '%Y-%m-%d')))):
-            dt = dt + timedelta(hours=self.dst_hour, minutes=self.dst_minutes)
+            dt = dt + timedelta(hours=self._dst_hour,
+                                minutes=self._dst_minutes)
         else:
-            dt = dt + timedelta(hours=self.norm_hour,
-                                minutes=self.norm_minutes)
+            dt = dt + timedelta(hours=self._norm_hour,
+                                minutes=self._norm_minutes)
         return dt
 
+    @property
     def transform_dst(self):
-        self.merge_df["Trans_INIT_Time"] = self.merge_df["INIT_Time"].apply(
-            lambda x:  self.trans_dst_helper(x))
+        self._df["Trans_INIT_Time"] = self._df["INIT_Time"].apply(
+            lambda x:  self._trans_dst_helper(x))
         return self
 
-    def get_time_flag(self, x):
+    def _get_time_flag(self, x):
         return x.iloc[-1] == x.iloc[0]
 
     def calcute_delta(self, data, col_name):
@@ -103,27 +110,28 @@ class Weather(object):
         sub_df["Tail_Value"] = sub_df["Sum_Value"] - sub_df["VALUE"]
         sub_df["VERIF_DATE"] = pd.to_datetime(sub_df["VERIF_DATE"])
         sub_df["Time_Flag"] = sub_df["VERIF_DATE"].view(np.int64).rolling(
-            window=2).apply(self.get_time_flag).astype(bool).values
+            window=2).apply(self._get_time_flag).astype(bool).values
         sub_df["Delta_Full"] = sub_df[["Sum_Value", "Tail_Value", "10Y_NORMAL_LAST", "Time_Flag"]].rolling(
             2, method="table", min_periods=0).apply(get_delta, raw=True, engine="numba")["Sum_Value"]
         sub_df["Delta_Sub"] = sub_df[["Sum_Sub_Value", "Sum_Sub_tail", "10Y_NORMAL_LAST", "Time_Flag"]].rolling(
             2, method="table", min_periods=0).apply(get_delta, raw=True, engine="numba")["Sum_Sub_Value"]
         return sub_df[['Trans_INIT_Time', 'VALUE', '10Y_NORMAL', 'Sum_Value', 'Delta_Full', "Delta_Sub"]]
 
+    @property
     def get_delta(self):
-        hdd_data = self.calcute_delta(self.merge_df, "HDD")
-        cdd_data = self.calcute_delta(self.merge_df, "CDD")
-        self.merge_df = pd.merge(hdd_data, cdd_data, how="inner",
-                                 on='Trans_INIT_Time', suffixes=('_hdd', '_cdd'))
-        self.merge_df.sort_values(by=['Trans_INIT_Time'], inplace=True)
+        hdd_data = self.calcute_delta(self._df, "HDD")
+        cdd_data = self.calcute_delta(self._df, "CDD")
+        self._df = pd.merge(hdd_data, cdd_data, how="inner",
+                            on='Trans_INIT_Time', suffixes=('_hdd', '_cdd'))
+        self._df.sort_values(by=['Trans_INIT_Time'], inplace=True)
 
         return self
 
-    def get_merge_df(self, save=False) -> pd.DataFrame:
+    def get_df(self, save=False) -> pd.DataFrame:
         if save:
-            self.merge_df.to_csv(save, header=True, index=False,
-                                 float_format='%.2f')
-        return self.merge_df
+            self._df.to_csv(save, header=True, index=False,
+                            float_format='%.2f')
+        return self._df
 
 
 if __name__ == '__main__':

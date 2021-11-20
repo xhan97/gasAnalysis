@@ -19,30 +19,35 @@ from weather import Weather
 
 class Gfsen(Weather):
     def __init__(self, path) -> None:
-        self.name = 'GFSEN'
-        self.window_size = 15
-        self.sub_delta = -6
-        self.dst_hour = 1
-        self.dst_minutes = 28
-        self.norm_hour = 0
-        self.norm_minutes = 55
-        self.path = path
+        self._name = 'GFSEN'
+        super().__init__(path=path,
+                         window_size=15,
+                         sub_delta=-6,
+                         dst_hour=1,
+                         dst_minutes=28,
+                         norm_hour=0,
+                         norm_minutes=55)
 
-    def set_init_hour(self):
-        self.data['INIT_HOUR'] = (
+    def _set_init_hour(self):
+        self._data['INIT_HOUR'] = (
             np.select(
-                condlist=[self.data['INIT_HOUR'] == 0, self.data['INIT_HOUR'] ==
-                          6, self.data['INIT_HOUR'] == 12, self.data['INIT_HOUR'] == 18],
+                condlist=[self._data['INIT_HOUR'] == 0, self._data['INIT_HOUR'] ==
+                          6, self._data['INIT_HOUR'] == 12, self._data['INIT_HOUR'] == 18],
                 choicelist=["00:00:00", "06:00:00", "12:00:00", "18:01:00"],
                 default="00:00:00"))
         return self
 
+    @property
     def get_name(self):
-        return self.name
+        return self._name
 
 
 if __name__ == '__main__':
     GFSEN_weather = Gfsen(
         path='data/raw/WeatherData/GFSEN_WDD_Forecasts_20100101_20210331.csv.gz')
-    merge_df = GFSEN_weather.load_data(start_date='2015-01-01').merge_data(
-    ).transform_dst().get_delta().get_merge_df(save="gfsen_weather_subclass.csv")
+    merge_df = (GFSEN_weather.
+                load_data(start_date='2015-01-01').
+                merge_data.
+                transform_dst.
+                get_delta.
+                get_df(save="gfsen_weather_subclass.csv"))

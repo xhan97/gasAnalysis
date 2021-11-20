@@ -17,21 +17,25 @@ from weather import Weather
 
 class Ecmen(Weather):
     def __init__(self, path) -> None:
-        self.name = 'ECMEN'
-        self.window_size = 14
-        self.sub_delta = -5
-        self.dst_hour = 2
-        self.dst_minutes = 40
-        self.norm_hour = 1
-        self.norm_minutes = 40
-        self.path = path
+        self._name = 'ECMEN'
+        super().__init__(path=path,
+                         window_size=14,
+                         sub_delta=-5,
+                         dst_hour=2,
+                         dst_minutes=40,
+                         norm_hour=1,
+                         norm_minutes=40)
 
     def get_name(self):
-        return self.name
+        return self._name
 
 
 if __name__ == '__main__':
     data_path = 'data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz'
     ECMEN_weather = Ecmen(path=data_path)
-    merge_df = ECMEN_weather.load_data(start_date='2015-01-01').merge_data(
-    ).transform_dst().get_delta().get_merge_df(save="ecmen_weather_subclass.csv")
+    merge_df = (ECMEN_weather
+                .load_data(start_date='2015-01-01')
+                .merge_data
+                .transform_dst
+                .get_delta
+                .get_df(save="ecmen_weather_subclass.csv"))

@@ -1,11 +1,11 @@
 # Copyright 2021 Xin Han
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ def vwap(data):
     return (data.price * data.volume).sum() / data.volume.sum()
 
 
-def getPrice(sub_data):
+def get_price(sub_data):
     price_df = sub_data.groupby("minete").min()
     price_df.rename(columns={"price": "low_price"}, inplace=True)
     price_df["volume"] = sub_data.groupby("minete").sum()["volume"].tolist()
@@ -51,7 +51,8 @@ def getPrice(sub_data):
     price_df.reset_index(inplace=True)
     price_df["date"] = price_df["date"].astype(str)
     price_df["datetime"] = price_df["date"] + " " + price_df["minete"]+":00"
-    return price_df[["datetime", "volume", "low_price", "high_price", "open_price", "close_price", "vmap"]]
+    features = ["datetime", "volume", "low_price", "high_price", "open_price", "close_price", "vmap"]
+    return price_df[features]
 
 
 for fileitem in shpfiles:
@@ -63,7 +64,7 @@ for fileitem in shpfiles:
             subdf = data[data["day"] == item]
             subdf["minete"] = subdf["time"].astype(str).str[0:5]
             subdf.drop(columns=["time"], inplace=True)
-            price_df = getPrice(subdf)
+            price_df = get_price(subdf)
             savepath = "result"+"//" + file[:10]
             os.makedirs(savepath, exist_ok=True)
             price_df.to_csv(savepath+"//"+str(item)+"price.csv",
@@ -100,7 +101,7 @@ for item in dirlist:
     os.makedirs(savepath, exist_ok=True)
     concat_df.to_csv(savepath + item + "_price.csv", index=False,
                      float_format='%.3f')  # Save dataframe
-    
-    
+
+
 if __name__ == '__main__':
     pass

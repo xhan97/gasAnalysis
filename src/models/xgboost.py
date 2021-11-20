@@ -22,9 +22,11 @@ from xgboost import plot_tree
 data = pd.read_csv("weather_ECMEN_secound_period_cluster.csv",
                    parse_dates=['Trans_INIT_Time'])
 
+
 def display_scores(scores):
     print("Scores: {0}\nMean: {1:.3f}\nStd: {2:.3f}".format(
         scores, np.mean(scores), np.std(scores)))
+
 
 def report_best_scores(results, n_top=3):
     for i in range(1, n_top + 1):
@@ -36,6 +38,7 @@ def report_best_scores(results, n_top=3):
                   results['std_test_score'][candidate]))
             print("Parameters: {0}".format(results['params'][candidate]))
             print("")
+
 
 period_data = pd.read_csv(
     'secound_period_ECMEN_data.csv', parse_dates=['datetime'])

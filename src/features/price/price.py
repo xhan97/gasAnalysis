@@ -28,7 +28,7 @@ def vwap(data):
         return (data.price * data.volume).sum() / data.volume.sum()
 
 
-def getPrice(sub_data):
+def get_price(sub_data):
     price_df = sub_data.groupby([pd.Grouper(freq='min')]).min()
     price_df.rename(columns={"price": "low_price"}, inplace=True)
     price_df["volume"] = sub_data["volume"].groupby(
@@ -55,10 +55,10 @@ for fileitem in shpfiles:
         day_m = pd.unique(data['day']).tolist()
         for item in day_m:
             subdf = data[data["day"] == item]
-            price_df = getPrice(subdf)
-            savepath = "result"+"/" + file[:10]
-            os.makedirs(savepath, exist_ok=True)
-            price_df.to_csv(savepath+"/"+str(item)+"price.csv",
+            price_df = get_price(subdf)
+            save_path = "result"+"/" + file[:10]
+            os.makedirs(save_path, exist_ok=True)
+            price_df.to_csv(save_path+"/"+str(item)+"price.csv",
                             header=True, index=True, float_format='%.3f')
 
 
@@ -98,17 +98,14 @@ for item in dirlist:
 
 #     # Iterate over unique filenames; read CSVs, concat DFs, save file
     for f in files['filename'].unique():
-        # Get list of fullpaths from unique filenames
         paths = files[files['filename'] == f]['fullpath']
-        # Get list of dataframes from CSV file paths
         dfs = [pd.read_csv(path) for path in paths]
-        concat_df = pd.concat(dfs)  # Concat dataframes into one
+        concat_df = pd.concat(dfs) 
         concat_df["CC_date"] = f[:4]
-        savepath = CONCAT_DIR + item + "/"
-        os.makedirs(savepath, exist_ok=True)
-        concat_df.to_csv(savepath+f, index=False,
-                         float_format='%.3f')  # Save dataframe
-
+        save_path = os.path.join(CONCAT_DIR, item)
+        os.makedirs(save_path, exist_ok=True)
+        concat_df.to_csv(os.path.join(save_path, f), index=False,
+                         float_format='%.3f')  
 
 CONCAT_DIR = "result/globel/"
 for item in dirlist:
@@ -118,7 +115,7 @@ for item in dirlist:
     concat_df = pd.concat(dfs)  # Concat dataframes into one
     # concat_df.sort_index(inplace=True)
     concat_df.sort_values(by=['datetime'], inplace=True)
-    savepath = CONCAT_DIR
-    os.makedirs(savepath, exist_ok=True)
-    concat_df.to_csv(savepath + item + "_price.csv", index=False,
+    save_path = CONCAT_DIR
+    os.makedirs(save_path, exist_ok=True)
+    concat_df.to_csv(save_path + item + "_price.csv", index=False,
                      float_format='%.3f')  # Save dataframe
