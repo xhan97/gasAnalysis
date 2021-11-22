@@ -32,10 +32,12 @@ class Ecmop(Weather):
 
 
 if __name__ == '__main__':
+    import os
     ECMOP_weather = Ecmop(
         path='data/raw/WeatherData/ECMOP_WDD_Forecasts_20100101_20210331.csv.gz')
+    outdir = "data\processed\WeatherData"
     merge_df = ECMOP_weather.load_data(start_date='2015-01-01') \
         .merge_data \
         .transform_dst \
         .get_delta \
-        .get_df(save="ecmop_weather_subclass.csv")
+        .get_df(save=os.path.join(outdir,"ecmop_weather_subclass.csv"))

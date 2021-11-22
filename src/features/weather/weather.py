@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 
-def get_delta(x):
+def cal_delta(x):
     if x[-1, -1]:
         da = x[-1, 0] - (x[0, 0])
     else:
@@ -55,6 +55,10 @@ class Weather(object):
     @property
     def get_data(self):
         return self._data
+
+    @property
+    def get_public_time(self):
+        return self._public_time
 
     @property
     def merge_data(self):
@@ -101,30 +105,29 @@ class Weather(object):
             lambda x:  self._trans_dst_helper(x))
         return self
 
-    def _get_time_flag(self, x):
+    def __get_time_flag(self, x):
         return x.iloc[-1] == x.iloc[0]
 
-    def calcute_delta(self, data, col_name):
-        sub_df = data[data["PARAM"]
-                      == col_name].reset_index()
-        sub_df["Tail_Value"] = sub_df["Sum_Value"] - sub_df["VALUE"]
-        sub_df["VERIF_DATE"] = pd.to_datetime(sub_df["VERIF_DATE"])
-        sub_df["Time_Flag"] = sub_df["VERIF_DATE"].view(np.int64).rolling(
-            window=2).apply(self._get_time_flag).astype(bool).values
-        sub_df["Delta_Full"] = sub_df[["Sum_Value", "Tail_Value", "10Y_NORMAL_LAST", "Time_Flag"]].rolling(
-            2, method="table", min_periods=0).apply(get_delta, raw=True, engine="numba")["Sum_Value"]
-        sub_df["Delta_Sub"] = sub_df[["Sum_Sub_Value", "Sum_Sub_tail", "10Y_NORMAL_LAST", "Time_Flag"]].rolling(
-            2, method="table", min_periods=0).apply(get_delta, raw=True, engine="numba")["Sum_Sub_Value"]
-        return sub_df[['Trans_INIT_Time', 'VALUE', '10Y_NORMAL', 'Sum_Value', 'Delta_Full', "Delta_Sub"]]
+    def calcute_delta(self, data):
+        data["Tail_Value"] = data["Sum_Value"] - data["VALUE"]
+        data["VERIF_DATE"] = pd.to_datetime(data["VERIF_DATE"])
+        data["Time_Flag"] = data["VERIF_DATE"].view(np.int64).rolling(
+            window=2).apply(self.__get_time_flag).astype(bool).values
+        data["Delta_Full"] = data[["Sum_Value", "Tail_Value", "10Y_NORMAL_LAST", "Time_Flag"]].rolling(
+            2, method="table", min_periods=0).apply(cal_delta, raw=True, engine="numba")["Sum_Value"]
+        data["Delta_Sub"] = data[["Sum_Sub_Value", "Sum_Sub_tail", "10Y_NORMAL_LAST", "Time_Flag"]].rolling(
+            2, method="table", min_periods=0).apply(cal_delta, raw=True, engine="numba")["Sum_Sub_Value"]
+        return data[['Trans_INIT_Time', 'VALUE', '10Y_NORMAL', 'Sum_Value', 'Delta_Full', "Delta_Sub"]]
 
     @property
     def get_delta(self):
-        hdd_data = self.calcute_delta(self._df, "HDD")
-        cdd_data = self.calcute_delta(self._df, "CDD")
-        self._df = pd.merge(hdd_data, cdd_data, how="inner",
+        hdd_data = self._df[self._df["PARAM"] == "HDD"].reset_index()
+        cdd_data = self._df[self._df["PARAM"] == "CDD"].reset_index()
+        cdd_data_delta = self.calcute_delta(cdd_data)
+        hdd_data_delta = self.calcute_delta(hdd_data)
+        self._df = pd.merge(hdd_data_delta, cdd_data_delta, how="inner",
                             on='Trans_INIT_Time', suffixes=('_hdd', '_cdd'))
         self._df.sort_values(by=['Trans_INIT_Time'], inplace=True)
-
         return self
 
     def get_df(self, save=False) -> pd.DataFrame:

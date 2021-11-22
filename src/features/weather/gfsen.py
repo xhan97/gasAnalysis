@@ -43,11 +43,13 @@ class Gfsen(Weather):
 
 
 if __name__ == '__main__':
+    import os
+    outdir = "data\processed\WeatherData"
     GFSEN_weather = Gfsen(
         path='data/raw/WeatherData/GFSEN_WDD_Forecasts_20100101_20210331.csv.gz')
-    merge_df = (GFSEN_weather.
-                load_data(start_date='2015-01-01').
-                merge_data.
-                transform_dst.
-                get_delta.
-                get_df(save="gfsen_weather_subclass.csv"))
+    merge_df = GFSEN_weather. \
+                load_data(start_date='2015-01-01'). \
+                merge_data. \
+                transform_dst. \
+                get_delta. \
+                get_df(save=os.path.join(outdir,"gfsen_weather_subclass.csv"))

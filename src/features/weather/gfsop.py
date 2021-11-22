@@ -38,7 +38,8 @@ class Gfsop(Weather):
         self._set_init_hour()
         return self
 
-    def _trans_dst(self):
+    @property
+    def transform_dst(self):
         self._df["Trans_INIT_Time"] = self._df["INIT_Time"].apply(
             lambda x:  self._trans_dst_helper(x))
         self._df['Trans_INIT_Time'] = (
@@ -54,11 +55,13 @@ class Gfsop(Weather):
 
 
 if __name__ == '__main__':
+    import os
+    outdir = "data\processed\WeatherData"
     GFSOP_weather = Gfsop(
         path='data/raw/WeatherData/GFSOP_WDD_Forecasts_20100101_20210331.csv.gz')
-    merge_df =  GFSOP_weather. \
-                load_data(start_date='2015-01-01'). \
-                merge_data. \
-                transform_dst. \
-                get_delta. \
-                get_df(save="gfsop_weather_subclass.csv")
+    merge_df = GFSOP_weather. \
+        load_data(start_date='2015-01-01'). \
+        merge_data. \
+        transform_dst. \
+        get_delta. \
+        get_df(save=os.path.join(outdir, "gfsop_weather_subclass.csv"))
