@@ -50,6 +50,7 @@ if __name__ == '__main__':
     selected_dir_list = ["2015", "2016",
                          "2017", "2018", "2019", "2020", "2021"]
     out_dir = "data\\interim\\Archive"
+    os.makedirs(out_dir, exist_ok=True)
     for input_dir in selected_dir_list:
         subfiles = []
         for dirpath, subdirs, files in os.walk(os.path.join(archive_input_dir, input_dir)):
@@ -66,7 +67,5 @@ if __name__ == '__main__':
             dfs.append(data)
         concat_df = pd.concat(dfs)
         price_df = get_price(concat_df)
-        out_path = os.path.join(out_dir, input_dir)
-        os.makedirs(out_path, exist_ok=True)
-        price_df.to_csv(os.path.join(out_path, input_dir+"_price.csv"),
+        price_df.to_csv(os.path.join(out_dir, input_dir+"_price.csv"),
                         float_format='%.3f', index=True)
