@@ -1,11 +1,11 @@
 # Copyright 2021 Xin Han
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,8 +29,8 @@ from datetime import timedelta
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-price_input_dir = "data\\interim\\Archive"
-out_dir = "data\\processed\\Archive"
+price_input_dir = "data\\interim\\Archive\\price"
+out_dir = "data\\interim\\Archive"
 
 price_files_path = []
 for dirpath, subdirs, files in os.walk(price_input_dir):
@@ -57,7 +57,8 @@ cutoff_df.dropna(how='any', inplace=True)
 
 dfs = []
 for item in cutoff_df[["cutoff_date_last", "cutoff_date", "cc_date"]].values:
-    qdata = data.loc[item[0]:item[1]].query("Contract_Delivery_Date==" + item[2])
+    qdata = data.loc[item[0]:item[1]].query(
+        "Contract_Delivery_Date==" + item[2])
     dfs.append(qdata)
 concat_df = pd.concat(dfs)
 

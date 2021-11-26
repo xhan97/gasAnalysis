@@ -49,7 +49,7 @@ if __name__ == '__main__':
     archive_input_dir = "data\\raw\\Archive"
     selected_dir_list = ["2015", "2016",
                          "2017", "2018", "2019", "2020", "2021"]
-    out_dir = "data\\interim\\Archive"
+    out_dir = "data\\interim\\Archive\\price"
     os.makedirs(out_dir, exist_ok=True)
     for input_dir in selected_dir_list:
         subfiles = []

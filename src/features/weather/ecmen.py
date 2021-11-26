@@ -31,11 +31,13 @@ class Ecmen(Weather):
 
 
 if __name__ == '__main__':
+    import os
     data_path = 'data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz'
+    out_dir = "data\processed\WeatherData"
     ECMEN_weather = Ecmen(path=data_path)
     merge_df = (ECMEN_weather
                 .load_data(start_date='2015-01-01')
                 .merge_data
                 .transform_dst
                 .get_delta
-                .get_df(save="ecmen_weather_subclass.csv"))
+                .get_df(save=os.path.join(out_dir,"ecmen_weather_subclass.csv")))
