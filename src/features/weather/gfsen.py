@@ -28,7 +28,7 @@ class Gfsen(Weather):
                          norm_hour=0,
                          norm_minutes=55)
 
-    def _set_init_hour(self):
+    def _init_hour(self):
         self._data['INIT_HOUR'] = (
             np.select(
                 condlist=[self._data['INIT_HOUR'] == 0, self._data['INIT_HOUR'] ==

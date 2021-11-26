@@ -1,121 +1,72 @@
-#!/usr/bin/env python
-# coding: utf-8
+# Copyright 2021 Xin Han
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-
-import glob
 import pandas as pd
 import numpy as np
 import os
-
-
-dirlist = ["2018", "2019", "2020", "2021"]
-
-shpfiles = []
-for inputdir in dirlist:
-    print(inputdir)
-    subfiles = []
-    for dirpath, subdirs, files in os.walk(inputdir+"/"):
-        for x in files:
-            if x.endswith(".gz"):
-                subfiles.append(os.path.join(dirpath, x))
-    shpfiles.append(subfiles)
+import time
 
 
 def vwap(data):
-    if data.volume.sum() == 0:
+    if data["Trade_Quantity"].sum() == 0:
         return np.nan
     else:
-        return (data.price * data.volume).sum() / data.volume.sum()
+        return (data["Trade_Price"] * data["Trade_Quantity"]).sum() / data["Trade_Quantity"].sum()
 
 
-def get_price(sub_data):
-    price_df = sub_data.groupby([pd.Grouper(freq='min')]).min()
-    price_df.rename(columns={"price": "low_price"}, inplace=True)
-    price_df["volume"] = sub_data["volume"].groupby(
-        [pd.Grouper(freq='min')]).sum().tolist()
-    price_df["high_price"] = sub_data["price"].groupby(
-        [pd.Grouper(freq='min')]).max().tolist()
-    price_df["open_price"] = sub_data["price"].groupby(
-        [pd.Grouper(freq='min')]).first().tolist()
-    price_df["close_price"] = sub_data["price"].groupby(
-        [pd.Grouper(freq='min')]).last().tolist()
-    price_df["vmap"] = sub_data.groupby(
-        [pd.Grouper(freq='min')], group_keys=False).apply(vwap).tolist()
+def get_price(df):
+    st = time.time()
+    price_df = df.groupby(["Contract_Delivery_Date", pd.Grouper(freq='min')]).agg(Low_Price=('Trade_Price', 'min'),
+                                                                                  High_Price=(
+        'Trade_Price', 'max'),
+        Open_Price=(
+        'Trade_Price', 'first'),
+        Close_Price=(
+        "Trade_Price", "last"),
+        Trade_Quantity=(
+        "Trade_Quantity", 'sum'),
+    )
+    price_df["Vwap"] = df.groupby(
+        ["Contract_Delivery_Date", pd.Grouper(freq='min')], group_keys=False).apply(vwap).tolist()
     price_df.dropna(how="any", inplace=True)
-    return price_df[["volume", "low_price", "high_price", "open_price", "close_price", "vmap"]]
+    et = time.time()
+    print(st - et)
+    return price_df
 
 
-for fileitem in shpfiles:
-    for file in fileitem:
-        data = pd.read_csv(file, usecols=[0, 1, 6, 7, 9], parse_dates=[
-                           [0, 1]], header=None, sep=',', quotechar='"')
-        data.rename(columns={'0_1': 'datetime', 6: 'day',
-                    7: 'volume', 9: 'price'}, inplace=True)
-        data.set_index("datetime", inplace=True)
-        day_m = pd.unique(data['day']).tolist()
-        for item in day_m:
-            subdf = data[data["day"] == item]
-            price_df = get_price(subdf)
-            save_path = "result"+"/" + file[:10]
-            os.makedirs(save_path, exist_ok=True)
-            price_df.to_csv(save_path+"/"+str(item)+"price.csv",
-                            header=True, index=True, float_format='%.3f')
-
-
-CONCAT_DIR = "result/globel/"
-os.makedirs(CONCAT_DIR, exist_ok=True)
-
-for item in dirlist:
-    # Use glob module to return all csv files under root directory. Create DF from this.
-    files = pd.DataFrame([file for file in glob.glob(
-        "result/"+item+"/*/*/*")], columns=["fullpath"])
-
-    #    fullpath
-    # 0  root\dir1\data_20170101_k.csv
-    # 1  root\dir1\data_20170102_k.csv
-    # 2  root\dir2\data_20170101_k.csv
-    # 3  root\dir2\data_20170102_k.csv
-
-    # # Split the full path into directory and filename
-    files_split = files['fullpath'].str.rsplit(
-        "/", 1, expand=True).rename(columns={0: 'path', 1: 'filename'})
-
-    #    path       filename
-    # 0  root\dir1  data_20170101_k.csv
-    # 1  root\dir1  data_20170102_k.csv
-    # 2  root\dir2  data_20170101_k.csv
-    # 3  root\dir2  data_20170102_k.csv
-
-    # Join these into one DataFrame
-    files = files.join(files_split)
-    print(files)
-
-    #    fullpath                       path        filename
-    # 0  root\dir1\data_20170101_k.csv  root\dir1   data_20170101_k.csv
-    # 1  root\dir1\data_20170102_k.csv  root\dir1   data_20170102_k.csv
-    # 2  root\dir2\data_20170101_k.csv  root\dir2   data_20170101_k.csv
-    # 3  root\dir2\data_20170102_k.csv  root\dir2   data_20170102_k.csv
-
-#     # Iterate over unique filenames; read CSVs, concat DFs, save file
-    for f in files['filename'].unique():
-        paths = files[files['filename'] == f]['fullpath']
-        dfs = [pd.read_csv(path) for path in paths]
-        concat_df = pd.concat(dfs) 
-        concat_df["CC_date"] = f[:4]
-        save_path = os.path.join(CONCAT_DIR, item)
-        os.makedirs(save_path, exist_ok=True)
-        concat_df.to_csv(os.path.join(save_path, f), index=False,
-                         float_format='%.3f')  
-
-CONCAT_DIR = "result/globel/"
-for item in dirlist:
-    filelist = [file for file in glob.glob("result/globel/"+item+"/*")]
-    # Get list of dataframes from CSV file paths
-    dfs = [pd.read_csv(path) for path in filelist]
-    concat_df = pd.concat(dfs)  # Concat dataframes into one
-    # concat_df.sort_index(inplace=True)
-    concat_df.sort_values(by=['datetime'], inplace=True)
-    save_path = CONCAT_DIR
-    os.makedirs(save_path, exist_ok=True)
-    concat_df.to_csv(save_path + item + "_price.csv", index=False,
-                     float_format='%.3f')  # Save dataframe
+if __name__ == '__main__':
+    archive_input_dir = "data\\raw\\Archive"
+    selected_dir_list = ["2015", "2016",
+                         "2017", "2018", "2019", "2020", "2021"]
+    out_dir = "data\\interim\\Archive"
+    for input_dir in selected_dir_list:
+        subfiles = []
+        for dirpath, subdirs, files in os.walk(os.path.join(archive_input_dir, input_dir)):
+            for x in files:
+                if x.endswith("eth.gz"):
+                    subfiles.append(os.path.join(dirpath, x))
+        dfs = []
+        for file in subfiles:
+            data = pd.read_csv(file, usecols=[0, 1, 6, 7, 9], parse_dates=[
+                [0, 1]], header=None, sep=',', quotechar='"')
+            data.rename(columns={'0_1': "Trade_Datetime", 6: "Contract_Delivery_Date",
+                        7: "Trade_Quantity", 9: "Trade_Price"}, inplace=True)
+            data.set_index("Trade_Datetime", inplace=True)
+            dfs.append(data)
+        concat_df = pd.concat(dfs)
+        price_df = get_price(concat_df)
+        out_path = os.path.join(out_dir, input_dir)
+        os.makedirs(out_path, exist_ok=True)
+        price_df.to_csv(os.path.join(out_path, input_dir+"_price.csv"),
+                        float_format='%.3f', index=True)

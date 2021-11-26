@@ -39,11 +39,11 @@ class Weather(object):
 
     def load_data(self, start_date):
         self._data = pd.read_csv(self._path, sep=',', na_values=['-'])
-        self._set_init_hour()
+        self._init_hour()
         self._start_date = start_date
         return self
 
-    def _set_init_hour(self):
+    def _init_hour(self):
         self._data['INIT_HOUR'] = (
             np.select(
                 condlist=[self._data['INIT_HOUR'] == 0, self._data['INIT_HOUR'] ==

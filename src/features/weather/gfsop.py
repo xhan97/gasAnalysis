@@ -35,7 +35,7 @@ class Gfsop(Weather):
         self._start_date = start_date
         self._data = pd.read_csv(
             self._path, sep=',', na_values=['-'], skiprows=[0])
-        self._set_init_hour()
+        self._init_hour()
         return self
 
     @property
