@@ -77,8 +77,8 @@ def normal_vmap(df):
 if __name__ == '__main__':
 
     output_dir = "data/processed/period"
-    weather_name = "gfsen"
-    weather_path = "data/processed/WeatherData/gfsen_weather_subclass.csv"
+    weather_name = "gfsop"
+    weather_path = "data/processed/WeatherData/gfsop_weather_subclass.csv"
     cut_off_df_path = "data/interim/Archive/cut_off/cut_off_price.csv"
     start_time = "6:00"
     end_time = "16:00"
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     periods = get_period(
         cut_off_df[weather_col_name], start_time=start_time, end_time=end_time)
     for i, pair in enumerate(periods, start=0):
-        period_data = cut_off_df[['Contract_Delivery_Date', 'Vwap', weather_col_name, 'dst_flag']].between_time(
+        period_data = cut_off_df[["Contract_Delivery_Date", "Vwap", weather_col_name, "dst_flag"]].between_time(
             pair[0], pair[1], include_start=False)
         period_data["Normal_Vwap"] = normal_vmap(period_data)
         save_path = os.path.join(output_dir, weather_name, "_".join(
