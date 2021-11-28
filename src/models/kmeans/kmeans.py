@@ -40,6 +40,7 @@ period_date = {"first_period": "00:28:00-06:28:00",
 
 weather_data.set_index("Trans_INIT_Time", inplace=True)
 
+
 def nomalize(sequence, method="l1"):
     if method == "True":
         res = [item/sequence[0] for item in sequence]
@@ -225,12 +226,14 @@ def show_clustering(dba_km, n_clusters, y_pred, ci_df, period_df, file_name):
 
     len_max_index, max_index = get_max_index(period_df)
     for label in set(y_pred):
-        show_time_series(period_df=period_df,label=label, axs_fig=axs[row_i, column_j])
+        show_time_series(period_df=period_df, label=label,
+                         axs_fig=axs[row_i, column_j])
 
         assert len_max_index == len(dba_km.cluster_centers_[
                                     label].ravel()), "time max index length error!"
-        show_cluster_center(max_index, dba_km,label=label,axs_fig=axs[row_i, column_j])
-        show_ci_box(ci_df,label=label,ax_fig=axs[row_i, column_j])
+        show_cluster_center(max_index, dba_km, label=label,
+                            axs_fig=axs[row_i, column_j])
+        show_ci_box(ci_df, label=label, ax_fig=axs[row_i, column_j])
 
         axs[row_i, column_j].set_title(
             "Cluster "+str(row_i*plot_count+column_j))

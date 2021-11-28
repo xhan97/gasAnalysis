@@ -1,0 +1,1 @@
+period: [(datetime.time(6, 0), datetime.time(6, 28)), (datetime.time(6, 28), datetime.time(12, 28)), (datetime.time(12, 28), datetime.time(16, 0))]
