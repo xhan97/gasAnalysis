@@ -1,309 +1,189 @@
-#!/usr/bin/env python
-# coding: utf-8
+# Copyright 2021 Xin Han
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import math
 import os
-from datetime import timedelta
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.gridspec import GridSpec
 from scipy.stats import norm
 from tslearn.clustering import TimeSeriesKMeans
 from tslearn.utils import to_time_series_dataset
 
-dirlist = ["2015", "2016", "2017", "2018", "2019", "2020", "2021"]
-shpfiles = []
-for inputdir in dirlist:
-    for dirpath, subdirs, files in os.walk(inputdir+"/"):
-        for x in files:
-            if x.endswith(".csv"):
-                shpfiles.append(os.path.join(dirpath, x))
+
+def get_merge_data(weather_name, period_path, weather_data_path):
+
+    weather_public_time_col_name = weather_name+"_public_time"
+    data = pd.read_csv(period_path, compression='gzip',
+                       parse_dates=["Trade_Datetime", weather_public_time_col_name], index_col=["Trade_Datetime"])
+    data["Trade_time"] = data.index.time
+    weather_data = pd.read_csv(
+        weather_data_path, parse_dates=["Trans_INIT_Time"])
+
+    res = data.groupby(['Contract_Delivery_Date', pd.Grouper(freq='D')]).agg(Normal_Vwap=('Normal_Vwap', list),
+                                                                             Trade_time=(
+                                                                                 'Trade_time', list),
+                                                                             ecmen_public_time=(
+                                                                                 weather_public_time_col_name, 'first'),
+                                                                             dst_flag=('dst_flag', 'first'))
+
+    merge_data = pd.merge(res, weather_data, how="left", left_on=weather_public_time_col_name, right_on='Trans_INIT_Time',
+                          suffixes=('_hdd', '_cdd'))
+    return merge_data
 
 
-weather_data = pd.read_csv(
-    "../../WeatherData/GFSEN_WDD_Forecasts.csv", parse_dates=["Trans_INIT_Time"])
-time_sep = weather_data["Trans_INIT_Time"].drop_duplicates(
-).reset_index(drop=True).values
-cutoff_pair = list(zip(time_sep, time_sep[1:]))
-
-first_period, secound_period = cutoff_pair[::4], cutoff_pair[1::4]
-theird_period, fourth_perid = cutoff_pair[2::4], cutoff_pair[3::4]
-
-
-period_dict = {"first_period": first_period,
-               'secound_period': secound_period, 'theird_period': theird_period}
-period_date = {"first_period": "00:28:00-06:28:00",
-               'secound_period': "06:28:00-12:28:00", 'theird_period': "12:28:00"}
-
-weather_data.set_index("Trans_INIT_Time", inplace=True)
-
-
-def nomalize(sequence, method="l1"):
-    if method == "True":
-        res = [item/sequence[0] for item in sequence]
-    elif method == "l2":
-        res = [j/i for i, j in zip(sequence[:-1], sequence[1:])]
-    return res
+def dba_fit_predict_data(n_cluster, period_data, file_name, save_model_path=None):
+    seed = 13
+    dba_km = TimeSeriesKMeans(n_clusters=n_cluster,
+                              metric="dtw",
+                              n_jobs=10,
+                              max_iter_barycenter=10,
+                              verbose=False,
+                              n_init=2,
+                              random_state=seed)
+    y_pred = dba_km.fit_predict(period_data)
+    if save_model_path:
+        os.makedirs(save_model_path, exist_ok=True)
+        file_name = "dba_"+file_name+"_"+str(n_cluster)
+        dba_km.to_pickle(os.path.join(save_model_path, file_name+".pkl"))
+    return dba_km, y_pred
 
 
-def get_value_set(file_list, cutoff_pair, time_flag, use_nomalize=False):
-    li = []
-    for file_path in file_list:
-        data = pd.read_csv(file_path, parse_dates=[
-            "datetime"], index_col="datetime")
-        for item in cutoff_pair:
-            df = None
-            df = data.loc[item[0]:item[1]]
-            if item[0].astype(str)[11:19] == time_flag:
-                df["time_flag"] = 1
-            else:
-                df["time_flag"] = 0
-            if df is not None:
-                li.append(df)
-    concat_df = pd.concat(li, axis=0)
-    concat_df.dropna(how="any", inplace=True)
-    res = concat_df.groupby(['CC_date', pd.Grouper(freq='D')]).agg(list)[
-        'vmap'].to_list()
-    if use_nomalize:
-        res = [nomalize(item, method=use_nomalize)
-               for item in res if len(item) > 2]
-    return concat_df, to_time_series_dataset(res)
+def show_time_series(period_df, label, km_model, ax_fig):
+    max_index = []
+    for Normal_Vwap, Trade_time, dst_flag in period_df[period_df["label"] == label][["Normal_Vwap", "Trade_time", "dst_flag"]].values:
+        color = [0.7, 0.8, 0.8]
+        if dst_flag == 1:
+            color = [1, 0.96, 0.56]
+        Trade_time = normalize_time(Trade_time)
+        if len(Trade_time) > len(max_index):
+            max_index = Trade_time
+        sns.lineplot(x=Trade_time, y=Normal_Vwap, color=color, ax=ax_fig)
+    center_df = pd.DataFrame(
+        {"Time": max_index, "normal_vwap": km_model.cluster_centers_[label].ravel()})
+    sns.lineplot(x="Time", y="normal_vwap", data=center_df,
+                 color="red", ax=ax_fig)
+    ax_fig.set_title("Cluster "+str(label))
+    ax_fig.xaxis.set_major_formatter(
+        matplotlib.dates.DateFormatter("%H:%M")
+    )
 
 
 def normalize_time(series):
     series = pd.to_datetime(series, format="%H:%M:%S").to_series()
-
     series += pd.to_timedelta(series.lt(series.shift()).cumsum(), unit="D")
-    # print(series)
     return series.values
 
 
-def fit_data(n_cluster, period_data, period_df, file_name, method="dba", use_nomalize=False):
-    if method == "dba":
-        seed = 13
-        dba_km = TimeSeriesKMeans(n_clusters=n_cluster,
-                                  metric="dtw",
-                                  n_jobs=8,
-                                  max_iter_barycenter=10,
-                                  verbose=False,
-                                  n_init=2,
-                                  random_state=seed)
-        y_pred = dba_km.fit_predict(period_data)
-        sava_path = "dba_"+file_name+"_"+str(n_cluster)+"_"+str(use_nomalize)
-        # print(sava_path)
-        dba_km.to_pickle(sava_path+".pkl")
-        show_clustering(dba_km=dba_km, n_clusters=n_cluster,
-                        y_pred=y_pred, period_data=period_data, period_df=period_df, file_name=sava_path)
+def get_ci_df(merge_data):
+    stat_feature = ['Sum_Value_hdd', 'Delta_Full_hdd', 'Delta_Sub_hdd',
+                    'Sum_Value_cdd', 'Delta_Full_cdd', 'Delta_Sub_cdd']
+    stats = merge_data.groupby(['label'])[stat_feature].agg([
+        'mean', 'count', 'std'])
+    ci = 0.95
+    ci_data = []
+    for label in stats.index:
+        for fe in stat_feature:
+            mean, count, std = stats.loc[label, fe]
+            z_hat = norm.ppf(ci+(1-ci)/2)*std/math.sqrt(count)
+            ci_left, ci_right = mean-z_hat, mean+z_hat
+            ci_data.append({'label': label, 'feature': fe,
+                            'ci_left': ci_left, 'ci_right': ci_right})
+    ci_df = pd.DataFrame(ci_data)
+    return ci_df
 
 
-def get_cluster_time_set(dba_km, y_pred, period_df):
-
-    time_dict = {}
-
-    for label in set(y_pred):
-        i = 0
-        time_set = []
-        for _, d in period_df.groupby(['CC_date', pd.Grouper(freq='D')]):
-            if len(d) > 2:
-                if(y_pred[i] == label):
-                    time_set.append(d.index)
-                i += 1
-        time_dict.update({label: time_set})
-    return time_dict
-
-
-def show_confidence_interval(ci_df, query_str, filename):
-    fig, ax = plt.subplots(1, 1, figsize=(6, 8))
-    fig.suptitle(" ".join(filename))
-    ci_sub_query = ci_df.round(2).query(query_str)[["left_ci", "right_ci"]]
-    SE_hat_x_list = list(ci_sub_query.itertuples(index=False, name=None))
-    x_hat_list = [(x[0]+x[1])/2 for x in SE_hat_x_list]
-    for i in range(len(x_hat_list)):
-        ax.errorbar(x_hat_list[i], np.arange(len(x_hat_list))[
-                    i], lolims=True, xerr=SE_hat_x_list[i][1]-x_hat_list[i], yerr=0.0, linestyle='', c='black')
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.95)
-    plt.savefig("_".join(filename)+".png", dpi=200,
-                bbox_inches="tight", orientation='landscape')
-
-
-def show_distribution(concat_df, file_name):
-    fig, axs = plt.subplots(2, 3, figsize=(20, 20))
-    fig.suptitle(" ".join(file_name))
-    row_i = 0
-    column_j = 0
-    for PARAM in ["CDD", "HDD"]:
-        sub_df = concat_df[concat_df["PARAM"] == PARAM]
-        for item in ["Sum_Value", "Delta_Sub", "Delta_Full"]:
-            sns.distplot(sub_df[item], rug=True, rug_kws={"color": "g"},
-                         kde_kws={"color": "k", "lw": 3, "label": "KDE"},
-                         hist_kws={"histtype": "step", "linewidth": 3,
-                                   "alpha": 1, "color": "g"}, ax=axs[row_i, column_j])
-            axs[row_i, column_j].set_title(PARAM)
-            column_j += 1
-            if column_j % 3 == 0:
-                row_i += 1
-                column_j = 0
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.95)
-    plt.savefig("_".join(file_name)+".png", dpi=200,
-                bbox_inches="tight", orientation='landscape')
-
-
-def get_max_index(period_df):
-    len_max_index = 0
-    max_index = None
-    for _, d in period_df.groupby(['CC_date', pd.Grouper(freq='D')]):
-        if len(d) > 2:
-            d["normal_vmap"] = nomalize(d["vmap"].values, method="True")
-            data_index = d.index
-            if d["time_flag"][0] == 1:
-                data_index = data_index + timedelta(hours=-1, minutes=0)
-            d["Time"] = normalize_time(data_index.time)
-            if len(d["Time"]) > len_max_index:
-                len_max_index = len(d["Time"])
-                max_index = d["Time"]
-    return len_max_index, max_index
-
-
-def show_time_series(period_df, axs_fig, label):
-    i = 0
-    for _, d in period_df.groupby(['CC_date', pd.Grouper(freq='D')]):
-        if len(d) > 2:
-            if(y_pred[i] == label):
-                d["normal_vmap"] = nomalize(
-                    d["vmap"].values, method="True")
-                data_index = d.index
-                color = [0.7, 0.8, 0.8]
-                if d["time_flag"][0] == 1:
-                    data_index = data_index + \
-                        timedelta(hours=-1, minutes=0)
-                    color = [1, 0.96, 0.56]
-                d["Time"] = normalize_time(data_index.time)
-
-                sns.lineplot(x="Time", y="normal_vmap", data=d,
-                             color=color, ax=axs_fig)
-            i += 1
-
-
-def show_ci_box(ci_df, ax_fig, label):
+def show_ci_box(ci_df, label, ax_fig):
     query_res = []
-    for param in ["CDD", "HDD"]:
-        for fe in ["Sum_Value", "Delta_Sub", "Delta_Full"]:
-            ci_query = ci_df.round(2).query(f"label == {label} & Param=='{param}' & fe=='{fe}'")[
-                ["Param", "fe", "left_ci", "right_ci"]].iloc[0].to_dict()
-            ci_query.update(
-                {"ci": [ci_query["left_ci"], ci_query["right_ci"]]})
-            for key in ['left_ci', 'right_ci']:
-                ci_query.pop(key)
-            query_res.append("\n".join("{}: {}".format(*i)
-                                       for i in ci_query.items()))
+    ci_df_index_label = ci_df.set_index(['label'])
+    for feature, ci_left, ci_right in ci_df_index_label.loc[label].values:
+        ci_dict = {feature: "[{:.2f}, {:.2f}]".format(ci_left, ci_right)}
+        query_res.append("\n".join("{}: {}".format(*i)
+                                   for i in ci_dict.items()))
     query_i = 0
+    ax_fig.axis('off')
+    ax_fig.set_title("Confidence Interval")
     for item in np.arange(0.05, 0.95, 0.15).tolist():
-        ax_fig.text(1.05, item, query_res[query_i],
-                    size=10,
-                    bbox=dict(
-            edgecolor='lightgreen', facecolor='none', pad=3, linewidth=1),
-            ha='left', va='center', transform=ax_fig.transAxes)
+        ax_fig.text(0.1, item, query_res[query_i],
+                    size=14)
         query_i += 1
 
 
-def show_cluster_center(max_index, dba_km, label, axs_fig):
-    center_df = pd.DataFrame(
-        {"index": max_index.values, "data": dba_km.cluster_centers_[label].ravel()})
-    sns.lineplot(x="index", y="data", data=center_df,
-                 color="red", ax=axs_fig)
+def show_confidence_interval(df, ax):
+    ci_d = df.round(2)[["ci_left", "ci_right"]]
+    SE_hat_x_list = list(ci_d.itertuples(index=False, name=None))
+    x_hat_list = [(x[0]+x[1])/2 for x in SE_hat_x_list]
+    for i in range(len(x_hat_list)):
+        ax.errorbar(x_hat_list[i], np.arange(len(x_hat_list))[
+                    i], lolims=True, xerr=SE_hat_x_list[i][1]-x_hat_list[i], yerr=0.0, linestyle='', c='black', elinewidth=3, mew=3)
 
 
-def show_clustering(dba_km, n_clusters, y_pred, ci_df, period_df, file_name):
-    plot_count = math.ceil(math.sqrt(n_clusters))
-    fig, axs = plt.subplots(plot_count, plot_count, figsize=(20, 20))
-    row_i = 0
-    column_j = 0
+def show_month_distribution(merge_data, label, ax_fig):
+    label_df = merge_data[merge_data['label'] == label]
+    sns.countplot(x="Month", data=label_df, ax=ax_fig)
 
-    len_max_index, max_index = get_max_index(period_df)
-    for label in set(y_pred):
-        show_time_series(period_df=period_df, label=label,
-                         axs_fig=axs[row_i, column_j])
 
-        assert len_max_index == len(dba_km.cluster_centers_[
-                                    label].ravel()), "time max index length error!"
-        show_cluster_center(max_index, dba_km, label=label,
-                            axs_fig=axs[row_i, column_j])
-        show_ci_box(ci_df, label=label, ax_fig=axs[row_i, column_j])
+def show_clustering(km_model, n_clusters, merge_data, file_name):
+    fig = plt.figure(figsize=(50, 80))
+    gs = GridSpec(n_clusters, 9, figure=fig)
 
-        axs[row_i, column_j].set_title(
-            "Cluster "+str(row_i*plot_count+column_j))
-        axs[row_i, column_j].xaxis.set_major_formatter(
-            matplotlib.dates.DateFormatter("%H:%M")
-        )
-        column_j += 1
-        if column_j % plot_count == 0:
-            row_i += 1
-            column_j = 0
-    fig.tight_layout(pad=1.0)
-    plt.savefig(file_name+".png", dpi=200,
+    ci_df = get_ci_df(merge_data)
+    for i, label in enumerate(reversed(range(16))):
+        ax = fig.add_subplot(gs[i, 0])
+        show_time_series(period_df=merge_data, km_model=km_model,
+                         label=label, ax_fig=ax)
+        ax2 = fig.add_subplot(gs[i, 1])
+        show_ci_box(ci_df, label, ax_fig=ax2)
+        ax3 = fig.add_subplot(gs[i, -1])
+        show_month_distribution(merge_data, label=label, ax_fig=ax3)
+    i = 2
+    for feature, df in ci_df.groupby("feature"):
+        ax = fig.add_subplot(gs[:, i])
+        show_confidence_interval(df, ax)
+        ax.set_title(feature)
+        i += 1
+    plt.savefig(file_name+".pdf",
                 bbox_inches="tight", orientation='landscape')
 
 
-def get_confidence_interbval(sample, ci=0.95):
-    x_hat = np.mean(sample)
-    n = len(sample)
-    z_hat = norm.ppf(ci+(1-ci)/2)*np.std(sample)/np.sqrt(n)
-    return x_hat-z_hat, x_hat+z_hat
+if __name__ == '__main__':
 
+    weather_name = "ecmen"
+    period = "period1"
+    period_path = "data/processed/period/ecmen/6_16/ecmenperiod1.csv.gz"
+    weather_data_path = "data/processed/WeatherData/ecmen_weather_subclass.csv"
 
-for period in list(period_dict.keys())[0:1]:
-    for normal in ["True", ]:
-        if period == "first_period":
-            time_flag = "01:28:00"
-            model_path = "../K-means/first_period/models/dba_first_period_16_True.pkl"
-        elif period == "secound_period":
-            time_flag = "07:28:00"
-            model_path = "../K-means/secound_period/models/dba_secound_period_16_True.pkl"
-        elif period == "theird_period":
-            time_flag = "13:28:00"
-            model_path = "../K-means/theird_period/models/dba_theird_period_16_True.pkl"
-        period_df, period_data = get_value_set(
-            shpfiles, period_dict[period], time_flag=time_flag, use_nomalize=normal)
-        model = TimeSeriesKMeans.from_pickle(model_path)
-        y_pred = model.predict(period_data)
+    save_model_path = os.path.join("models/k-means", weather_name)
+    save_figure_path = os.path.join(
+        "reports/figures/kmeansCluster/", weather_name)
+    os.makedirs(save_figure_path, exist_ok=True)
 
-        res = get_cluster_time_set(model, y_pred, period_df)
-
-        ci_data = []
-        for label in res.keys():
-            li = []
-            for item in res[label]:
-                li.append(weather_data[weather_data.index.isin(item)])
-            concat_df = pd.concat(li, axis=0)
-            concat_df = concat_df.loc[concat_df.index.strftime(
-                "%H:%M:%S") <= time_flag]
-
-            show_distribution(concat_df, file_name=[period, str(label)])
-
-            for PARAM in ["CDD", "HDD"]:
-                for fe in ["Sum_Value", "Delta_Sub", "Delta_Full"]:
-                    sub_df = concat_df[concat_df["PARAM"] == PARAM]
-
-                    left_ci, right_ci = get_confidence_interbval(
-                        sub_df[fe].values)
-                    ci_data.append((label, PARAM, fe, left_ci, right_ci))
-
-        ci_df = pd.DataFrame(
-            ci_data, columns=["label", "Param", "fe", "left_ci", "right_ci"])
-
-        for PARAM in ["CDD", "HDD"]:
-            for fe in ["Sum_Value", "Delta_Sub", "Delta_Full"]:
-                query_str = f"Param=='{PARAM}' & fe=='{fe}'"
-                show_confidence_interval(ci_df, query_str, [period, PARAM, fe])
-
-        show_clustering(dba_km=model,
-                        y_pred=y_pred,
-                        n_clusters=16,
-                        file_name=model_path[:-4],
-                        period_df=period_df,
-                        ci_df=ci_df)
+    n_cluster = 16
+    merge_data = get_merge_data(
+        weather_name, period_path=period_path, weather_data_path=weather_data_path)
+    period_data = to_time_series_dataset(merge_data["Normal_Vwap"].values)
+    file_name = "_".join([weather_name, period])
+    dba_km, y_pred = dba_fit_predict_data(n_cluster=n_cluster,
+                                          period_data=period_data,
+                                          file_name=file_name,
+                                          save_model_path=save_model_path)
+    merge_data["label"] = y_pred
+    merge_data["Month"] = merge_data["Trans_INIT_Time"].dt.month
+    show_clustering(km_model=dba_km, n_clusters=n_cluster,
+                    merge_data=merge_data, file_name=os.path.join(save_figure_path, file_name))

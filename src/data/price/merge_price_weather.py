@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     cut_off_df = pd.read_csv(cut_off_df_path, parse_dates=[
         "Trade_Datetime"], index_col="Trade_Datetime")
-    weather_col_name = weather_name+"_pulicate_time"
+    weather_col_name = weather_name+"_public_time"
     cut_off_df = get_weather_public_time(
         cut_off_df, weather_col_name, weather_path)
     cut_off_df = get_dst_flag(cut_off_df)
