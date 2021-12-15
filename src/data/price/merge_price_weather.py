@@ -89,7 +89,7 @@ if __name__ == '__main__':
     cut_off_df = get_weather_public_time(
         cut_off_df, weather_col_name, weather_path)
     cut_off_df = get_dst_flag(cut_off_df)
-    cut_off_df.index = cut_off_df.index + pd.DateOffset(hours=-1)
+    #cut_off_df.index = cut_off_df.index + pd.DateOffset(hours=-1)
 
     cut_off_df.loc[cut_off_df.dst_flag == 1, weather_col_name] = cut_off_df[cut_off_df["dst_flag"]
                                                                             == 1][weather_col_name].apply(lambda x: x + timedelta(hours=-1))

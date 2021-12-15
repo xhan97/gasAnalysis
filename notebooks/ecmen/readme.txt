@@ -1,1 +1,0 @@
-period: [(datetime.time(6, 0), datetime.time(13, 40)), (datetime.time(13, 40), datetime.time(16, 0))]

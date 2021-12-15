@@ -1,2 +1,0 @@
-cut_off_df.loc[cut_off_df.dst_flag == 1, weather_col_name] = cut_off_df[cut_off_df["dst_flag"]
-                                                                            == 1][weather_col_name].apply(lambda x: x + timedelta(hours=1))
