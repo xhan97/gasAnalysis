@@ -177,6 +177,7 @@ if __name__ == '__main__':
     n_cluster = 16
     merge_data = get_merge_data(
         weather_name, period_path=period_path, weather_data_path=weather_data_path)
+    merge_data["Month"] = merge_data["Trans_INIT_Time"].dt.month
     period_data = to_time_series_dataset(merge_data["Normal_Vwap"].values)
     file_name = "_".join([weather_name, period])
     dba_km, y_pred = dba_fit_predict_data(n_cluster=n_cluster,
@@ -184,6 +185,5 @@ if __name__ == '__main__':
                                           file_name=file_name,
                                           save_model_path=save_model_path)
     merge_data["label"] = y_pred
-    merge_data["Month"] = merge_data["Trans_INIT_Time"].dt.month
     show_clustering(km_model=dba_km, n_clusters=n_cluster,
                     merge_data=merge_data, file_name=os.path.join(save_figure_path, file_name))
