@@ -127,11 +127,11 @@ def show_ci_box(ci_df, label, ax_fig):
 
 def show_confidence_interval(df, ax):
     ci_d = df.round(2)[["ci_left", "ci_right"]]
-    SE_hat_x_list = list(ci_d.itertuples(index=False, name=None))
-    x_hat_list = [(x[0]+x[1])/2 for x in SE_hat_x_list]
+    se_hat_x_list = list(ci_d.itertuples(index=False, name=None))
+    x_hat_list = [(x[0]+x[1])/2 for x in se_hat_x_list]
     for i in range(len(x_hat_list)):
         ax.errorbar(x_hat_list[i], np.arange(len(x_hat_list))[
-                    i], lolims=True, xerr=SE_hat_x_list[i][1]-x_hat_list[i], yerr=0.0, linestyle='', c='black', elinewidth=3, mew=3)
+                    i], lolims=True, xerr=se_hat_x_list[i][1]-x_hat_list[i], yerr=0.0, linestyle='', c='black', elinewidth=3, mew=3)
 
 
 def show_month_distribution(merge_data, label, ax_fig):
