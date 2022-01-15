@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 from dotenv import find_dotenv, load_dotenv
 
-from .merge_price_weather import make_merge
+from merge_price_weather import make_merge
 
 
 @click.command()
@@ -35,7 +35,7 @@ def main(output_dir, weather_name, weather_path, cutoff_df_path, start_time, end
     logger = logging.getLogger(__name__)
     logger.info('building features')
     make_merge(weather_name=weather_name, weather_path=weather_path,
-               cutoff_price_path=cutoff_df_path, start_time=start_time, end_time=end_time, out_dir=output_dir)
+               cutoff_price_path=cutoff_df_path, st_time=start_time, ed_time=end_time, out_dir=output_dir)
 
 
 if __name__ == '__main__':
