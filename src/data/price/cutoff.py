@@ -13,7 +13,8 @@
 # limitations under the License.
 
 """
-Front month contract cutoff 在每个月倒数第三个交易日下午13：29分。
+Front month contract cutoff 
+在每个月倒数第三个交易日下午13：29分。
 比如某个月最后一个交易时间是27日，那就找到25日的13：29作为cutoff。
 对于某月m, 首先找到在m-1月的cutoff时间c1和在m月的cutoff时间c2。
 在c1-c2期间发生的交割期为m+1的交易，为Front month trade。

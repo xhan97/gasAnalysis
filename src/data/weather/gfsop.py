@@ -17,7 +17,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-from weather import Weather
+from .weather import Weather
 
 
 class Gfsop(Weather):

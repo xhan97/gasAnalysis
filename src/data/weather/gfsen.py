@@ -14,7 +14,7 @@
 
 import numpy as np
 
-from weather import Weather
+from .weather import Weather
 
 
 class Gfsen(Weather):

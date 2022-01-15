@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .weather import Weather
 
-from weather import Weather
 
-
-class Ecmop(Weather):
+class Ecmen(Weather):
     def __init__(self, path) -> None:
-        self._name = 'ECMOP'
+        self._name = 'ECMEN'
         super().__init__(path=path,
-                         window_size=9,
+                         window_size=14,
                          sub_delta=-5,
-                         dst_hour=1,
-                         dst_minutes=55,
-                         norm_hour=0,
-                         norm_minutes=55)
+                         dst_hour=2,
+                         dst_minutes=40,
+                         norm_hour=1,
+                         norm_minutes=40)
 
     def get_name(self):
         return self._name
@@ -33,11 +32,12 @@ class Ecmop(Weather):
 
 if __name__ == '__main__':
     import os
-    ECMOP_weather = Ecmop(
-        path='data/raw/WeatherData/ECMOP_WDD_Forecasts_20100101_20210331.csv.gz')
-    outdir = "data\processed\WeatherData"
-    merge_df = ECMOP_weather.load_data(start_date='2015-01-01') \
-        .merge_data \
-        .transform_dst \
-        .get_delta \
-        .get_df(save=os.path.join(outdir,"ecmop_weather_subclass.csv"))
+    data_path = 'data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz'
+    out_dir = "data\processed\WeatherData"
+    ECMEN_weather = Ecmen(path=data_path)
+    merge_df = (ECMEN_weather
+                .load_data(start_date='2015-01-01')
+                .merge_data
+                .transform_dst
+                .get_delta
+                .get_df(save=os.path.join(out_dir,"ecmen_weather_subclass.csv")))

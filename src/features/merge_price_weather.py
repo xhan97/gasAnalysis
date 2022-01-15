@@ -74,6 +74,34 @@ def normal_vmap(df):
     return peirod_grouped.transform(lambda x: x / x.values[0])
 
 
+def make_merge(weather_path, weather_name, cutoff_price_path, st_time, ed_time, out_dir):
+    cut_off_df = pd.read_csv(cutoff_price_path, parse_dates=[
+        "Trade_Datetime"], index_col="Trade_Datetime")
+    weather_col_name = weather_name+"_public_time"
+    cut_off_df = get_weather_public_time(
+        cut_off_df, weather_col_name, weather_path)
+    cut_off_df = get_dst_flag(cut_off_df)
+
+    cut_off_df.loc[cut_off_df.dst_flag == 1, weather_col_name] = cut_off_df[cut_off_df["dst_flag"]
+                                                                            == 1][weather_col_name].apply(lambda x: x + timedelta(hours=-1))
+    cut_off_df.dropna(how='any', inplace=True)
+    periods = get_period(
+        cut_off_df[weather_col_name], start_time=st_time, end_time=ed_time)
+    cut_off_df.loc[cut_off_df.dst_flag == 1, weather_col_name] = cut_off_df[cut_off_df["dst_flag"]
+                                                                            == 1][weather_col_name].apply(lambda x: x + timedelta(hours=1))
+    for i, pair in enumerate(periods, start=0):
+        period_data = cut_off_df[["Contract_Delivery_Date", "Vwap", weather_col_name, "dst_flag"]].between_time(
+            pair[0], pair[1], include_start=False)
+        period_data["Normal_Vwap"] = normal_vmap(period_data)
+        save_path = os.path.join(out_dir, weather_name, "_".join(
+            [t.split(":")[0] for t in [st_time, ed_time]]))
+        os.makedirs(save_path, exist_ok=True)
+        period_data.to_csv(os.path.join(save_path, weather_name+"_period_"+str(i+1)+".csv.gz"),
+                           float_format='%.3f',
+                           index=True,
+                           compression='gzip')
+
+
 if __name__ == '__main__':
 
     output_dir = "data/processed/period"
@@ -82,30 +110,3 @@ if __name__ == '__main__':
     cut_off_df_path = "data/interim/Archive/cut_off/cut_off_price.csv"
     start_time = "6:00"
     end_time = "16:00"
-
-    cut_off_df = pd.read_csv(cut_off_df_path, parse_dates=[
-        "Trade_Datetime"], index_col="Trade_Datetime")
-    weather_col_name = weather_name+"_public_time"
-    cut_off_df = get_weather_public_time(
-        cut_off_df, weather_col_name, weather_path)
-    cut_off_df = get_dst_flag(cut_off_df)
-    #cut_off_df.index = cut_off_df.index + pd.DateOffset(hours=-1)
-
-    cut_off_df.loc[cut_off_df.dst_flag == 1, weather_col_name] = cut_off_df[cut_off_df["dst_flag"]
-                                                                            == 1][weather_col_name].apply(lambda x: x + timedelta(hours=-1))
-    cut_off_df.dropna(how='any', inplace=True)
-    periods = get_period(
-        cut_off_df[weather_col_name], start_time=start_time, end_time=end_time)
-    cut_off_df.loc[cut_off_df.dst_flag == 1, weather_col_name] = cut_off_df[cut_off_df["dst_flag"]
-                                                                            == 1][weather_col_name].apply(lambda x: x + timedelta(hours=1))
-    for i, pair in enumerate(periods, start=0):
-        period_data = cut_off_df[["Contract_Delivery_Date", "Vwap", weather_col_name, "dst_flag"]].between_time(
-            pair[0], pair[1], include_start=False)
-        period_data["Normal_Vwap"] = normal_vmap(period_data)
-        save_path = os.path.join(output_dir, weather_name, "_".join(
-            [t.split(":")[0] for t in [start_time, end_time]]))
-        os.makedirs(save_path, exist_ok=True)
-        period_data.to_csv(os.path.join(save_path, weather_name+"period"+str(i+1)+".csv.gz"),
-                           float_format='%.3f',
-                           index=True,
-                           compression='gzip')

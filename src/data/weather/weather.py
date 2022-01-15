@@ -135,8 +135,3 @@ class Weather(object):
             self._df.to_csv(save, header=True, index=False,
                             float_format='%.2f')
         return self._df
-
-
-if __name__ == '__main__':
-
-    pass
