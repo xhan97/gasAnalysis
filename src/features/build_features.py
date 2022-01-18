@@ -12,30 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from email.policy import default
 import logging
 from pathlib import Path
 
 import click
+import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 
-from merge_price_weather import make_merge
+from period_weather import make_period_cutoff
 
 
 @click.command()
-@click.argument('output_dir', default='data/processed/period', type=click.Path())
 @click.argument('weather_name', default='ecmen')
 @click.argument('weather_path', default='data/processed/WeatherData/ecmen_weather_subclass.csv', type=click.Path(exists=True))
-@click.argument('cutoff_df_path', default='data/interim/Archive/cut_off/cut_off_price.csv', type=click.Path(exists=True))
+@click.argument('cutoff_path', default='data/interim/Archive/cut_off/cut_off_price.csv', type=click.Path(exists=True))
 @click.argument('start_time', default='6:00')
 @click.argument('end_time', default='16:00')
-def main(output_dir, weather_name, weather_path, cutoff_df_path, start_time, end_time):
+@click.argument('using_period', default=1, type=click.INT)
+@click.argument('output_dir', default='data/processed/period', type=click.Path())
+def main(weather_name, weather_path, cutoff_path, start_time, end_time, using_period, output_dir):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info('building features')
-    make_merge(weather_name=weather_name, weather_path=weather_path,
-               cutoff_price_path=cutoff_df_path, st_time=start_time, ed_time=end_time, out_dir=output_dir)
+    make_period_cutoff(weather_name=weather_name, weather_path=weather_path, cutoff_path=cutoff_path,
+                       st_time=start_time, ed_time=end_time, out_dir=output_dir, using_period=using_period)
 
 
 if __name__ == '__main__':

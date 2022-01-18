@@ -87,7 +87,6 @@ def make_price(achive_dirs, output_dir, st_year):
         achive_dirs) if int(item) >= int(st_year)]
     merged_price_df = get_merge_price(achive_dirs, selected_dir_list)
     price_df = get_price(merged_price_df)
-    print(price_df.head())
     cut_off_df = get_cutoff(price_df)
     cut_off_df.to_csv(os.path.join(output_dir, "cut_off_price.csv"),
                       float_format='%.3f', index=True)
