@@ -1,10 +1,8 @@
-gasAnalysis
-==============================
+# gasAnalysis
 
 A short description of the project.
 
-Project Organization
-------------
+## 1. 项目组织结构
 
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`
@@ -51,7 +49,107 @@ Project Organization
     │
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
+## 2. 开发环境安装
 
---------
+本项目使用 Python 3 语言开发，推荐使用 [Anaconda](https://www.anaconda.com/) 管理 Python 环境。
+参考 [Installation Anaconda](https://docs.anaconda.com/anaconda/install/windows/) 根据使用的操作系统安装最新版本的 Anaconda。
 
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+* 创建并激活环境
+  
+```bash
+conda create -n <YOUR ENVNAME>  python=3.8
+conda activate <YOUR ENVNAME>
+```
+
+* 项目依赖安装
+
+```
+cd YOUR_DIR/gasAnalyis
+pip install -r requirements.txt
+```
+
+## 3. 数据预处理
+
+```bash
+python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
+```
+
+### 3.1 参数说明
+
+| 参数名                  | 说明                     | 可选项                     | 格式 | 默认值                                                            |
+| ----------------------- | ------------------------ | -------------------------- | ---- | ----------------------------------------------------------------- |
+| **ARCHIVE_INPUT_PATH**  | Archive 存储路径         |                            |      | data/raw/Archive                                                  |
+| **WEATHER_NAME**        | 使用的天气数据名         | ecmen, ecmop, gfsop, gfsen |      | ecmen                                                             |
+| **WEATHER_INPUT_PATH**  | 使用的天气路径           |                            |      | data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz |
+| **ARCHIVE_OUTPUT_PATH** | Archive 预处理后保存路径 |                            |      | data/processed/Archive                                            |
+| **WEATHER_OUTPUT_PATH** | 天气数据预处理后输出路径 |                            |      | data/processed/WeatherData                                        |
+| **START_YEAR**          | 使用数据开始年份         |                            |      | 2015                                                              |
+
+### 3.2 示例
+
+```
+python -u  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz data/processed/Archive data/processed/WeatherData 2015
+```
+
+### 3.3 使用默认参数
+
+```
+python -u  src/data/make_dataset.py
+```
+
+## 4. 构建特征
+
+```bash
+python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
+```
+
+### 参数说明
+
+| 参数名           | 说明                           | 可选项                     | 格式  | 默认值                                                |
+| ---------------- | ------------------------------ | -------------------------- | ----- | ----------------------------------------------------- |
+| **WEATHER_NAME** | 使用的天气数据名               | ecmen, ecmop, gfsop, gfsen |       | ecmen                                                 |
+| **WEATHER_PATH** | 预处理后的天气存储路径         |                            |       | data/processed/WeatherData/ecmen_weather_subclass.csv |
+| **CUTOFF_PATH**  | 预处理后的Archive 数据存储路径 |                            |       | data/processed/Archive/cut_off_price.csv              |
+| **START_TIME**   | 选取交易记录每日开始时间       |                            | HH:MM | 06:00                                                 |
+| **END_TIME**     | 选取交易记录每日结束时间       |                            | HH:MM | 16:00                                                 |
+| **USING_PERIOD** | 选取使用 period                |                            |       | 1                                                     |
+| **OUTPUT_DIR**   | 构建的特征保存路径             |                            |       | data/processed/period                                 |
+
+### 示例
+
+```bash
+python -u src/features/build_features.py ecmen  data/processed/WeatherData/ecmen_weather_subclass.csv data/processed/Archive/cut_off_price.csv 06:00 16:00 1 data/processed/period 
+```
+
+### 使用默认参数
+
+```bash
+python -u src/features/build_features.py
+```
+
+## 5. 模型训练及可视化
+
+```bash
+python -u src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH SAVE_FIGURE_PATH
+```
+
+### 5.1 参数说明
+
+| 参数名           | 说明                 | 可选项 | 格式 | 默认值                                                        |
+| ---------------- | -------------------- | ------ | ---- | ------------------------------------------------------------- |
+| DATA_PATH        | 已构建的特征路径     |        |      | data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz |
+| NUM_CLUSTERS     | 聚类数量             |        |      | 16                                                            |
+| SAVE_MODEL_PATH  | 模型保存路径         |        |      | models/k-means                                                |
+| SAVE_FIGURE_PATH | 聚类可视化图保存路径 |        |      | reports/figures/kmeansCluster                                 |
+
+### 5.2 示例
+
+```
+python -u src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz 16 models/k-means reports/figures/kmeansCluster
+```
+
+### 5.3 使用默认参数
+
+```
+python -u src/models/kmeans/train_model.py
+```
