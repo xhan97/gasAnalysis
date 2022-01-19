@@ -1,7 +1,5 @@
 # gasAnalysis
 
-A short description of the project.
-
 ## 1. 项目组织结构
 
     ├── LICENSE
@@ -91,7 +89,7 @@ python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPU
 python -u  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz data/processed/Archive data/processed/WeatherData 2015
 ```
 
-### 3.3 使用默认参数
+### 3.3 使用默认参数可直接使用
 
 ```
 python -u  src/data/make_dataset.py
@@ -103,7 +101,7 @@ python -u  src/data/make_dataset.py
 python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
 ```
 
-### 参数说明
+### 4.1 参数说明
 
 | 参数名           | 说明                           | 可选项                     | 格式  | 默认值                                                |
 | ---------------- | ------------------------------ | -------------------------- | ----- | ----------------------------------------------------- |
@@ -115,13 +113,13 @@ python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH S
 | **USING_PERIOD** | 选取使用 period                |                            |       | 1                                                     |
 | **OUTPUT_DIR**   | 构建的特征保存路径             |                            |       | data/processed/period                                 |
 
-### 示例
+### 4.2 示例
 
 ```bash
 python -u src/features/build_features.py ecmen  data/processed/WeatherData/ecmen_weather_subclass.csv data/processed/Archive/cut_off_price.csv 06:00 16:00 1 data/processed/period 
 ```
 
-### 使用默认参数
+### 4.3 使用默认参数可直接使用
 
 ```bash
 python -u src/features/build_features.py
@@ -148,7 +146,7 @@ python -u src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PAT
 python -u src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz 16 models/k-means reports/figures/kmeansCluster
 ```
 
-### 5.3 使用默认参数
+### 5.3 使用默认参数可直接使用
 
 ```
 python -u src/models/kmeans/train_model.py
