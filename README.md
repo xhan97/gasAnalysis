@@ -70,7 +70,8 @@
 
 本项目使用 Python 3 语言开发，推荐使用 [Anaconda](https://www.anaconda.com/) 管理 Python 环境。
 参考 [Installation Anaconda](https://docs.anaconda.com/anaconda/install/windows/) 根据使用的操作系统下载和安装最新版本的 Anaconda。
-* 创建并激活环境
+
+- 创建并激活环境
   
 ```bash
 conda create -n <YOUR_ENVIRONMENT_NAME>  python=3.8 
@@ -79,7 +80,7 @@ conda activate <YOUR_ENVIRONMENT_NAME>
 
 Anaconda 的更多使用可参考 [manage-environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)。**注意：文档中以下示例均在该激活的环境下运行。**
 
-* 项目依赖安装
+- 项目依赖安装
 
 ```bash
 cd <YOUR_DIR>/gasAnalyis
@@ -90,7 +91,7 @@ pip install -r requirements.txt
 
 ### 3.1 模块功能
 
-本模块对天然
+本模块对天然气交易数据和天气数据进行预处理。处理过程如下图所示，针对天然气交易数据，得到每分钟内交易的特征，并划分 Front month trade。针对给定的天气数据，按照气象站每天每次公布的记录提取特征，并将记录的公布时间转化为 US Central time 时间。
 
 ![data_preprocess](/assets/data_preprocess.png)
 
@@ -108,8 +109,8 @@ python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPU
 | **WEATHER_NAME**        | 使用的天气数据名         | ecmen, ecmop, gfsop, gfsen |      | ecmen                                                             |
 | **WEATHER_INPUT_PATH**  | 使用的天气路径           |                            |      | data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz |
 | **ARCHIVE_OUTPUT_PATH** | Archive 预处理后保存路径 |                            |      | data/processed/Archive                                            |
-| **WEATHER_OUTPUT_PATH** | 天气数据预处理后输出路径 |                            |      | data/processed/WeatherData                                        |
-| **START_YEAR**          | 使用数据开始年份         |                            |      | 2015                                                              |
+| **WEATHER_OUTPUT_PATH** | 天气数据预处理后保存路径 |                            |      | data/processed/WeatherData                                        |
+| **START_YEAR**          | 选择使用数据开始年份         |                            |      | 2015                                                              |
 
 #### 3.2.2 示例
 
@@ -126,6 +127,8 @@ python -u  src/data/make_dataset.py
 ## 4. 构建特征
 
 ### 4.1 模块功能
+
+![build_feature](/assets/build_feature.png)
 
 ### 4.2 运行方式
 
@@ -158,6 +161,7 @@ python -u src/features/build_features.py
 
 ## 5. 模型训练及可视化
 
+![km_model](/assets/km_model.png)
 ### 5.1 模块功能
 
 ### 5.2 运行方式
