@@ -3,21 +3,22 @@
 - [gasAnalysis](#gasanalysis)
   - [1. 项目组织结构](#1-项目组织结构)
   - [2. 开发环境安装](#2-开发环境安装)
-  - [3. 数据预处理](#3-数据预处理)
-    - [3.1 模块功能](#31-模块功能)
-    - [3.2 运行方法](#32-运行方法)
-      - [3.2.1 参数说明](#321-参数说明)
-      - [3.2.2 示例](#322-示例)
-  - [4. 构建特征](#4-构建特征)
+  - [3. 项目总体框架](#3-项目总体框架)
+  - [4. 数据预处理](#4-数据预处理)
     - [4.1 模块功能](#41-模块功能)
-    - [4.2 运行方式](#42-运行方式)
+    - [4.2 运行方法](#42-运行方法)
       - [4.2.1 参数说明](#421-参数说明)
       - [4.2.2 示例](#422-示例)
-  - [5. 模型训练及可视化](#5-模型训练及可视化)
+  - [5. 构建特征](#5-构建特征)
     - [5.1 模块功能](#51-模块功能)
     - [5.2 运行方式](#52-运行方式)
       - [5.2.1 参数说明](#521-参数说明)
       - [5.2.2 示例](#522-示例)
+  - [6. 模型训练及可视化](#6-模型训练及可视化)
+    - [6.1 模块功能](#61-模块功能)
+    - [6.2 运行方式](#62-运行方式)
+      - [6.2.1 参数说明](#621-参数说明)
+      - [6.2.2 示例](#622-示例)
 
 ## 1. 项目组织结构
 
@@ -68,8 +69,7 @@
 
 ## 2. 开发环境安装
 
-本项目使用 Python 3 语言开发，推荐使用 [Anaconda](https://www.anaconda.com/) 管理 Python 环境。
-参考 [Installation Anaconda](https://docs.anaconda.com/anaconda/install/windows/) 根据使用的操作系统下载和安装最新版本的 Anaconda。
+本项目使用 Python 3 语言开发，推荐使用 [Anaconda](https://www.anaconda.com/) 管理 Python 环境。用户可参考 [Installation Anaconda](https://docs.anaconda.com/anaconda/install/windows/) 根据使用的操作系统下载和安装最新版本的 Anaconda。
 
 - 创建并激活环境
   
@@ -87,21 +87,25 @@ cd <YOUR_DIR>/gasAnalyis
 pip install -r requirements.txt 
 ```
 
-## 3. 数据预处理
+## 3. 项目总体框架
 
-### 3.1 模块功能
+项目总体分为四个模块，包括数据预处理、特征构建、模型训练和结果可视化。每个模块的详细内容和运行方式可以在第 [4](#4-数据预处理) 节中查看。用户可以使用自己的数据根据第 [4](#4-数据预处理) 节介绍的每个模块运行方式按照框架的顺序依次运行。**注意：每个模块都可单独运行，但前提是它依赖的前面的模块已经运行过。**
+![framework](/assets/framework.png)
+## 4. 数据预处理
 
-本模块对天然气交易数据和天气数据进行预处理。处理过程如下图所示，针对天然气交易数据，得到每分钟内交易的特征，并划分 Front month trade。针对给定的天气数据，按照气象站每天每次公布的记录提取特征，并将记录的公布时间转化为 US Central time 时间。
+### 4.1 模块功能
+
+本模块对天然气交易数据和天气数据进行预处理。处理过程如下图所示，针对天然气交易数据，得到每分钟内交易的特征，并划分 Front month trade。针对给定的天气数据，按照气象站每天每次公布的记录提取特征，并将记录的公布时间转化为 US Central time 时间。用户可以选择要使用的数据的开始年份。
 
 ![data_preprocess](/assets/data_preprocess.png)
 
-### 3.2 运行方法
+### 4.2 运行方法
 
 ```bash
 python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
 ```
 
-#### 3.2.1 参数说明
+#### 4.2.1 参数说明
 
 | 参数名                  | 说明                     | 可选项                     | 格式 | 默认值                                                            |
 | ----------------------- | ------------------------ | -------------------------- | ---- | ----------------------------------------------------------------- |
@@ -110,9 +114,9 @@ python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPU
 | **WEATHER_INPUT_PATH**  | 使用的天气路径           |                            |      | data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz |
 | **ARCHIVE_OUTPUT_PATH** | Archive 预处理后保存路径 |                            |      | data/processed/Archive                                            |
 | **WEATHER_OUTPUT_PATH** | 天气数据预处理后保存路径 |                            |      | data/processed/WeatherData                                        |
-| **START_YEAR**          | 选择使用数据开始年份         |                            |      | 2015                                                              |
+| **START_YEAR**          | 选择使用数据开始年份     |                            |      | 2015                                                              |
 
-#### 3.2.2 示例
+#### 4.2.2 示例
 
 ```bash
 python -u  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz data/processed/Archive data/processed/WeatherData 2015
@@ -124,18 +128,20 @@ python -u  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/
 python -u  src/data/make_dataset.py
 ```
 
-## 4. 构建特征
+## 5. 构建特征
 
-### 4.1 模块功能
+### 5.1 模块功能
+
+本模块使用预处理后的天然气交易数据和天气数据构建模型需要的特征。每日交易时间根据气象站公布的时刻可被划分为若干个时间段(Period)，用户可以选择每日关注的交易时间段（例如：06:00 - 16:00），该时间段可能包含多个 Period（例如：2个），因此用户需要选择在该时间段内关注的Period（例如：第1个）。根据选择的Period, 每日的天然气交易数据被构建为交易片段，每个片段有气象站公布的天气特征。模块数据处理的流程如下图所示。
 
 ![build_feature](/assets/build_feature.png)
 
-### 4.2 运行方式
+### 5.2 运行方式
 
 ```bash
 python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
 ```
-#### 4.2.1 参数说明
+#### 5.2.1 参数说明
 
 | 参数名           | 说明                           | 可选项                     | 格式  | 默认值                                                |
 | ---------------- | ------------------------------ | -------------------------- | ----- | ----------------------------------------------------- |
@@ -147,7 +153,7 @@ python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH S
 | **USING_PERIOD** | 选取使用 period                |                            |       | 1                                                     |
 | **OUTPUT_DIR**   | 构建的特征保存路径             |                            |       | data/processed/period                                 |
 
-#### 4.2.2 示例
+#### 5.2.2 示例
 
 ```bash
 python -u src/features/build_features.py ecmen  data/processed/WeatherData/ecmen_weather_subclass.csv data/processed/Archive/cut_off_price.csv 06:00 16:00 1 data/processed/period 
@@ -159,18 +165,20 @@ python -u src/features/build_features.py ecmen  data/processed/WeatherData/ecmen
 python -u src/features/build_features.py
 ```
 
-## 5. 模型训练及可视化
+## 6. 模型训练及可视化
+
+### 6.1 模块功能
+
+本模块利用已购建特征的交易片段数据集训练模型，并利用训练完成的模型对交易片段进行分类。此外，本模块提供了分类结果都可视化对比功能。
 
 ![km_model](/assets/km_model.png)
-### 5.1 模块功能
-
-### 5.2 运行方式
+### 6.2 运行方式
 
 ```bash
 python -u src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH SAVE_FIGURE_PATH
 ```
 
-#### 5.2.1 参数说明
+#### 6.2.1 参数说明
 
 | 参数名           | 说明                 | 可选项 | 格式 | 默认值                                                        |
 | ---------------- | -------------------- | ------ | ---- | ------------------------------------------------------------- |
@@ -179,7 +187,7 @@ python -u src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PAT
 | SAVE_MODEL_PATH  | 模型保存路径         |        |      | models/k-means                                                |
 | SAVE_FIGURE_PATH | 聚类可视化图保存路径 |        |      | reports/figures/kmeansCluster                                 |
 
-#### 5.2.2 示例
+#### 6.2.2 示例
 
 ```bash
 python -u src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz 16 models/k-means reports/figures/kmeansCluster
