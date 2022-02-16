@@ -89,7 +89,7 @@ pip install -r requirements.txt
 
 ## 3. 项目总体框架
 
-项目总体分为四个模块，包括数据预处理、特征构建、模型训练和结果可视化。每个模块的详细内容和运行方式可以在第 [4](#4-数据预处理) 节中查看。用户可以使用自己的数据根据第 [4](#4-数据预处理) 节介绍的每个模块运行方式按照框架的顺序依次运行。**注意：每个模块都可单独运行，但前提是它依赖的前面的模块已经运行过。**
+项目总体分为四个模块，包括[数据预处理](#4-数据预处理)、[特征构建](#5-构建特征)、[模型训练和结果可视化](#6-模型训练及可视化)。每个模块的详细内容和运行方式可以在对应章节中查看。用户可以使用自己的数据根据每个模块对应章节介绍的运行方式按照框架的顺序依次运行。**注意：每个模块都可单独运行，但前提是它依赖的前面的模块已经运行过。**
 ![framework](/assets/framework.png)
 ## 4. 数据预处理
 
@@ -100,6 +100,7 @@ pip install -r requirements.txt
 ![data_preprocess](/assets/data_preprocess.png)
 
 ### 4.2 运行方法
+
 
 ```bash
 python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
