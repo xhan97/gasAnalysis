@@ -29,7 +29,7 @@ def load_data(data_path):
     return data
 
 
-def dba_fit_predict_data(n_cluster, ts_dataset, save_model_path=None):
+def dba_fit_data(n_cluster, ts_dataset):
     seed = 13
     dba_km = TimeSeriesKMeans(n_clusters=n_cluster,
                               metric="dtw",
@@ -38,19 +38,20 @@ def dba_fit_predict_data(n_cluster, ts_dataset, save_model_path=None):
                               verbose=False,
                               n_init=2,
                               random_state=seed)
-    y_pred = dba_km.fit_predict(ts_dataset)
-    if save_model_path:
-        file_name = "dba"+"_"+str(n_cluster)
-        save_model_path = os.path.join(save_model_path, 'dba')
-        os.makedirs(save_model_path, exist_ok=True)
-        dba_km.to_pickle(os.path.join(save_model_path, file_name+'.pkl'))
-    return dba_km, y_pred
+    dba_km = dba_km.fit(ts_dataset)
+    return dba_km
 
 
 def dba_fit_predict_vwap(n_cluster, data, save_model_path=None):
     period_vwap = to_time_series_dataset(data["Normal_Vwap"].values)
-    km_model, y_pred = dba_fit_predict_data(
+    km_model = dba_fit_data(
         n_cluster, period_vwap, save_model_path=save_model_path)
+    y_pred = km_model.predict(period_vwap)
+    if save_model_path:
+        file_name = "dba"+"_"+str(n_cluster)
+        save_model_path = os.path.join(save_model_path, 'dba')
+        os.makedirs(save_model_path, exist_ok=True)
+        km_model.to_pickle(os.path.join(save_model_path, file_name+'.pkl'))
     return km_model, y_pred
 
 
