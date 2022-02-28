@@ -19,6 +19,10 @@
     - [6.2 运行方式](#62-运行方式)
       - [6.2.1 参数说明](#621-参数说明)
       - [6.2.2 示例](#622-示例)
+  - [7. 预测](#7-预测)
+  - [8. 使用 app](#8-使用-app)
+    - [8.1 体系](#81-体系)
+    - [8.2 运行](#82-运行)
 
 ## 1. 项目组织结构
 
@@ -198,4 +202,36 @@ python -u src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_
 如果使用默认参数可直接使用
 ```bash
 python -u src/models/kmeans/train_model.py
+```
+
+## 7. 预测
+
+![predict](/assets/predict.png)
+
+## 8. 使用 app
+
+### 8.1 体系
+
+![image](assets/arch.png)
+
+### 8.2 运行
+
+进入根目录并运行
+
+Streamlit
+
+```bash
+streamlit run app.frontend/streamlit_main.py
+```
+
+FastAPI 
+
+```bash
+uvicorn app.backend.main:app
+```
+
+MLflow UI
+
+```bash
+mlflow ui --backend-store-uri sqlite:///db/bakckend.db
 ```
