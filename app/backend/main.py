@@ -24,7 +24,7 @@ from src.models.kmeans.data import load_data
 from src.models.kmeans.model import TsKmeans
 from src.models.kmeans.train import Trainer
 
-from models import DeleteApiData, PredictApiData, TrainApiData
+from app.backend.models import DeleteApiData, PredictApiData, TrainApiData
 
 # mlflow.set_tracking_uri('sqlite:///backend.db')
 mlflow.set_tracking_uri("sqlite:///db/backend.db")

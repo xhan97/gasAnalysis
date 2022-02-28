@@ -40,4 +40,4 @@ if __name__ == '__main__':
                 .merge_data
                 .transform_dst
                 .get_delta
-                .get_df(save=os.path.join(out_dir,"ecmen_weather_subclass.csv")))
+                .get_df(save=os.path.join(out_dir, "ecmen_weather_subclass.csv")))

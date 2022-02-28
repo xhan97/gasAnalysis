@@ -14,7 +14,6 @@
 
 from tslearn.utils import to_time_series_dataset
 
-
 class Trainer:
     def __init__(self, model):
         """Initialize the trainer"""
@@ -24,7 +23,6 @@ class Trainer:
         return self.model
     
     def train(self, dataset):
-        #period_vwap = to_time_series_dataset(dataset["Normal_Vwap"].values)
         """Trains the model and logs the results"""
         self.model = self.model.fit(dataset)
         return self.get_model
