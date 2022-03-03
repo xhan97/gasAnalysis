@@ -60,18 +60,21 @@ def dba_fit_predict_vwap(n_cluster, data, save_model_path=None):
 @click.argument('num_clusters', default=16, type=click.INT)
 @click.argument('save_model_path', default='models/k-means/ecmen')
 @click.argument('save_figure_path', default='reports/figures/kmeansCluster/ecmen')
-def main(data_path, num_clusters, save_model_path, save_figure_path):
+@click.argument('save_data_path', default='data/processed/predict/ecmen/06_00_13_40')
+def main(data_path, num_clusters, save_model_path, save_figure_path, save_data_path):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
     logger.info('training k-means model')
+    os.makedirs(save_data_path, exist_ok=True)
 
     data = load_data(data_path)
     dba_model, y_hat = dba_fit_predict_vwap(
         data=data, n_cluster=num_clusters, save_model_path=save_model_path)
     data["label"] = y_hat
-    
+    data_basename = os.path.basename(data_path)
+    data.to_pickle(os.path.join(save_data_path, data_basename[:-7]+"_label"+".pkl.gz"),comprehension='gzip')
 
     logger.info('Visualizing clusters of k-means')
     show_clustering(km_model=dba_model, n_clusters=num_clusters,

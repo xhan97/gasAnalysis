@@ -102,7 +102,7 @@ def show_clustering(km_model, n_clusters, merge_data, save_path):
     gs = GridSpec(n_clusters, 9, figure=fig)
 
     ci_df = get_ci_df(merge_data)
-    for i, label in enumerate(reversed(range(16))):
+    for i, label in enumerate(reversed(range(n_clusters))):
         ax = fig.add_subplot(gs[i, 0])
         show_time_series(period_df=merge_data, km_model=km_model,
                          label=label, ax_fig=ax)
