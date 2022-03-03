@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from email.policy import default
+from genericpath import exists
 import logging
+import os
+from email.policy import default
 from pathlib import Path
 
 import click
@@ -37,6 +39,7 @@ def main(weather_name, weather_path, cutoff_path, start_time, end_time, using_pe
     """
     logger = logging.getLogger(__name__)
     logger.info('building features')
+    os.mkdir(output_dir, exist_ok=True)
     make_period_cutoff(weather_name=weather_name, weather_path=weather_path, cutoff_path=cutoff_path,
                        st_time=start_time, ed_time=end_time, out_dir=output_dir, using_period=using_period)
 

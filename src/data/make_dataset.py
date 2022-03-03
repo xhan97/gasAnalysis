@@ -55,6 +55,8 @@ def main(start_year, archive_input_path, archive_output_path, weather_name, weat
     """
     logger = logging.getLogger(__name__)
     logger.info('making price data from raw data')
+    os.mkdir(archive_output_path, exist_ok=True)
+    os.mkdir(weather_output_path, exist_ok=True)
     make_price(archive_input_path, archive_output_path, start_year)
     logger.info('making weather data from raw data')
     make_weather(weather_name=weather_name, weather_path=weather_input_path,

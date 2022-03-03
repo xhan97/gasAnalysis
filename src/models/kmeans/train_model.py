@@ -67,6 +67,8 @@ def main(data_path, num_clusters, save_model_path, save_figure_path):
     logger.info('training k-means model')
 
     data = load_data(data_path)
+    os.makedirs(save_model_path, exist_ok=True)
+    os.makedirs(save_figure_path, exist_ok=True)
     dba_model, y_hat = dba_fit_predict_vwap(
         data=data, n_cluster=num_clusters, save_model_path=save_model_path)
     data["label"] = y_hat
