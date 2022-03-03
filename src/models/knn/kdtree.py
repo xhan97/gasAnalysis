@@ -66,6 +66,8 @@ def preprocess_new_data(weather_name, weather_path,):
 if __name__ == '__main__':
     data = load_data(
         "data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz")
+    km_model = TimeSeriesKMeans.from_pickle()
+    data = get_label(data, km_model)
     weather_feature = data[['VALUE_hdd', '10Y_NORMAL_hdd', 'Sum_Value_hdd', 'Delta_Full_hdd',
                             'Delta_Sub_hdd', 'VALUE_cdd', '10Y_NORMAL_cdd', 'Sum_Value_cdd',
                             'Delta_Full_cdd', 'Delta_Sub_cdd', 'Month']]
