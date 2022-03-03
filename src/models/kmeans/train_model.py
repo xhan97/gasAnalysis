@@ -71,6 +71,7 @@ def main(data_path, num_clusters, save_model_path, save_figure_path):
     dba_model, y_hat = dba_fit_predict_vwap(
         data=data, n_cluster=num_clusters, save_model_path=save_model_path)
     data["label"] = y_hat
+    
 
     logger.info('Visualizing clusters of k-means')
     show_clustering(km_model=dba_model, n_clusters=num_clusters,
