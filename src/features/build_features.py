@@ -39,7 +39,7 @@ def main(weather_name, weather_path, cutoff_path, start_time, end_time, using_pe
     """
     logger = logging.getLogger(__name__)
     logger.info('building features')
-    os.mkdir(output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     make_period_cutoff(weather_name=weather_name, weather_path=weather_path, cutoff_path=cutoff_path,
                        st_time=start_time, ed_time=end_time, out_dir=output_dir, using_period=using_period)
 
