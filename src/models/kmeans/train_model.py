@@ -21,7 +21,7 @@ from pathlib import Path
 import click
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
-from visualize import show_clustering
+from src.visualization.clustering import show_clustering
 
 
 def load_data(data_path):
