@@ -121,8 +121,6 @@ def show_time_series(period_df: pd.DataFrame, label: int, km_model, kn_item: dic
             # dark_color, neibor_index[i]), linewidth = 2, ax=ax_fig)
             sns.lineplot(x=Trade_time, y=Normal_Vwap,
                          color=dark_color, linewidth=1, ax=ax_fig)
-
-            print(i)
         # sns.lineplot(x=Trade_time, y=Normal_Vwap,
         #              color=normal_color, ax=ax_fig)
         i += 1
@@ -158,8 +156,8 @@ def save_clustering_fig(km_model, n_clusters, merge_data, kn_item: dict, save_pa
 
 @click.command()
 @click.argument('trained_data_path', default="data/processed/predict/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz", type=click.Path(exists=True))
-@click.argument('model_path', default='models/k-means/ecmen/dba/dba_16.pkl')
-@click.argument('new_weather_data_path', default='data/raw/newdata/newecmen.csv')
+@click.argument('model_path', default='models/k-means/ecmen/dba/dba_16.pkl', type=click.Path(exists=True))
+@click.argument('new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path(exists=True))
 @click.argument('new_weather_data_name', default='ecmen')
 @click.argument('k', default=10)
 @click.argument('save_figure_path', default='reports/figures/kmeansCluster/ecmen')
@@ -178,15 +176,7 @@ def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_
         new_weather_data_name, new_weather_data_path)
     neibors = knn_fit_predict(data, k, new_data)
     save_clustering_fig(km_model, 16, data, neibors, save_figure_path)
-
-    # save_data_path = 'data/processed/predict/ecmen/06_00_13_40'
-    # os.makedirs(save_data_path, exist_ok=True)
-    # data_basename = os.path.basename(
-    #     'E:/tulip/Misc/gasAnalysis/data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz')
-    # data.to_pickle(os.path.join(
-    #     save_data_path, data_basename[:-7]+"_label"+".pkl.gz"), compression='gzip')
-
-    logger.info('predict new data')
+    logger.info('predicted figure is saved in ' + save_figure_path)
 
 
 if __name__ == '__main__':
