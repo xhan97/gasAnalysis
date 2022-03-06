@@ -19,6 +19,11 @@
     - [6.2 运行方式](#62-运行方式)
       - [6.2.1 参数说明](#621-参数说明)
       - [6.2.2 示例](#622-示例)
+  - [7. 预测](#7-预测)
+    - [7.1 模块功能](#71-模块功能)
+    - [7.2 运行方式](#72-运行方式)
+      - [7.2.1 参数说明](#721-参数说明)
+      - [7.2.2 示例](#722-示例)
 
 ## 1. 项目组织结构
 
@@ -90,6 +95,7 @@ pip install -r requirements.txt
 ## 3. 项目总体框架
 
 项目总体分为四个模块，包括[数据预处理](#4-数据预处理)、[特征构建](#5-构建特征)、[模型训练和结果可视化](#6-模型训练及可视化)。每个模块的详细内容和运行方式可以在对应章节中查看。用户可以使用自己的数据根据每个模块对应章节介绍的运行方式按照框架的顺序依次运行。**注意：每个模块都可单独运行，但前提是它依赖的前面的模块已经运行过。**
+
 ![framework](/assets/framework.png)
 ## 4. 数据预处理
 
@@ -170,7 +176,7 @@ python -u src/features/build_features.py
 
 ### 6.1 模块功能
 
-本模块利用已购建特征的交易片段数据集训练模型，并利用训练完成的模型对交易片段进行分类。此外，本模块提供了分类结果都可视化对比功能。
+本模块利用已构建特征的交易片段数据集训练模型，并利用训练完成的模型对交易片段进行分类。此外，本模块提供了分类结果都可视化对比功能。
 
 ![km_model](/assets/km_model.png)
 ### 6.2 运行方式
@@ -198,3 +204,68 @@ python -u src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_
 ```bash
 python -u src/models/kmeans/train_model.py
 ```
+
+## 7. 预测
+
+### 7.1 模块功能
+
+本模块利用已训练的模型和数据对新数据进行预测，用户可根据示例准备新的天气数据和基本面数据进行预测，预测结果将以可视化的方式保存至文件。
+
+![predict](/assets/predict.png)
+
+### 7.2 运行方式
+
+```bash
+ipython TRAIND_DATA_PATH MODEL_PATH NEW_WEATHER_PATH NEW_WEATHER_NAME K SAVE_FIGURE_PATH
+```
+
+#### 7.2.1 参数说明
+
+| 参数名           | 说明                   | 可选项 | 格式 | 默认值                                                              |
+| ---------------- | ---------------------- | ------ | ---- | ------------------------------------------------------------------- |
+| TRAIND_DATA_PATH | 已训练的数据路径       |        |      | data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz |
+| MODEL_PATH       | 已训练的模型路径       |        |      | models/k-means/ecmen/dba/dba_16.pkl                                 |
+| NEW_WEATHER_PATH | 要预测的天气数据路径   |        |      | data/raw/newdata/newecmen.csv                                       |
+| NEW_WEATHER_NAME | 要预测的天气数据名     |        |      | ecmen                                                               |
+| K                | 预测的数量             |        |      | 10                                                                  |
+| SAVE_FIGURE_PATH | 预测的可视化图保存路径 |        |      | reports/figures/kmeansCluster/ecmen                                 |
+
+
+#### 7.2.2 示例
+
+```bash
+ipython src/prediction/predict.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz models/k-means/ecmen/dba/dba_16.pkl data/raw/newdata/newecmen.csv ecmen 10 reports/figures/kmeansCluster/ecmen
+```
+
+如果使用默认参数可直接使用
+```bash
+ipython src/prediction/predict.py
+```
+
+<!-- ## 8. 使用 app
+
+### 8.1 体系
+
+![image](assets/arch.png)
+
+### 8.2 运行
+
+进入根目录并运行
+
+Streamlit
+
+```bash
+streamlit run app.frontend/streamlit_main.py
+```
+
+FastAPI 
+
+```bash
+uvicorn app.backend.main:app
+```
+
+MLflow UI
+
+```bash
+mlflow ui --backend-store-uri sqlite:///db/bakckend.db
+``` -->

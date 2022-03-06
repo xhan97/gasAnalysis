@@ -37,7 +37,7 @@ class Weather(object):
         self._norm_hour = norm_hour
         self._norm_minutes = norm_minutes
 
-    def load_data(self, start_date):
+    def load_data(self, start_date=None):
         self._data = pd.read_csv(self._path, sep=',', na_values=['-'])
         self._init_hour()
         self._start_date = start_date
@@ -79,8 +79,9 @@ class Weather(object):
             " " + self._df["INIT_HOUR"]
         self._df["INIT_Time"] = pd.to_datetime(
             self._df["INIT_Time"], format="%Y-%m-%d %H:%M:%S")
-        self._df = self._df[(
-            self._df['INIT_Time'] >= self._start_date)]
+        if self._start_date:
+            self._df = self._df[(
+                self._df['INIT_Time'] >= self._start_date)]
         self._df["VALUE"] = self._df["VALUE"].astype("float64")
         return self
 

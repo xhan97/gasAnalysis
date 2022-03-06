@@ -1,0 +1,9 @@
+artifact_path: dtw_kmeans
+flavors:
+  sklearn:
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.0.1
+model_uuid: cde1b1d5d3d541efbf324b8e32cd8a13
+run_id: ee66d5acdc0b4b91bcf5247fdb5abda4
+utc_time_created: '2022-02-18 15:09:45.534193'
