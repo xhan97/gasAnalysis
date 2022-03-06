@@ -28,7 +28,7 @@ from period_weather import make_period_cutoff
 @click.command()
 @click.argument('weather_name', default='ecmen')
 @click.argument('weather_path', default='data/processed/WeatherData/ecmen_weather_subclass.csv', type=click.Path(exists=True))
-@click.argument('cutoff_path', default='data/interim/Archive/cut_off/cut_off_price.csv', type=click.Path(exists=True))
+@click.argument('cutoff_path', default='data/processed/Archive/cut_off_price.csv', type=click.Path(exists=True))
 @click.argument('start_time', default='6:00')
 @click.argument('end_time', default='16:00')
 @click.argument('using_period', default=1, type=click.INT)
