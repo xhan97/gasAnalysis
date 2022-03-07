@@ -216,25 +216,27 @@ ipython src/models/kmeans/train_model.py
 ### 7.2 运行方式
 
 ```bash
-ipython TRAIND_DATA_PATH MODEL_PATH NEW_WEATHER_PATH NEW_WEATHER_NAME K SAVE_FIGURE_PATH
+ipython TRAIND_DATA_PATH MODEL_PATH NEW_WEATHER_PATH NEW_WEATHER_NAME GNSD_HISTORICAL_DATA_PATH NEW_GNSD_DATA_PATH  K  SAVE_FIGURE_PATH
 ```
 
 #### 7.2.1 参数说明
 
-| 参数名           | 说明                   | 可选项 | 格式 | 默认值                                                              |
-| ---------------- | ---------------------- | ------ | ---- | ------------------------------------------------------------------- |
-| TRAIND_DATA_PATH | 已训练的数据路径       |        |      | data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz |
-| MODEL_PATH       | 已训练的模型路径       |        |      | models/k-means/ecmen/dba/dba_16.pkl                                 |
-| NEW_WEATHER_PATH | 要预测的天气数据路径   |        |      | data/raw/newdata/newecmen.csv                                       |
-| NEW_WEATHER_NAME | 要预测的天气数据名     |        |      | ecmen                                                               |
-| K                | 预测的数量             |        |      | 10                                                                  |
-| SAVE_FIGURE_PATH | 预测的可视化图保存路径 |        |      | reports/figures/kmeansCluster/ecmen                                 |
+| 参数名                    | 说明                   | 可选项                     | 格式 | 默认值                                                              |
+| ------------------------- | ---------------------- | -------------------------- | ---- | ------------------------------------------------------------------- |
+| TRAIND_DATA_PATH          | 已训练的数据路径       |                            |      | data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz |
+| MODEL_PATH                | 已训练的模型路径       |                            |      | models/k-means/ecmen/dba/dba_16.pkl                                 |
+| NEW_WEATHER_PATH          | 新的天气数据路径       |                            |      | data/raw/newdata/newecmen.csv                                       |
+| NEW_WEATHER_NAME          | 新的天气数据名         | ecmen, ecmop, gfsop, gfsen |      | ecmen                                                               |
+| GNSD_HISTORICAL_DATA_PATH | 基本面历史数据路径     |                            |      | data/processed/gnsdData/gnsd.csv                                    |
+| NEW_GNSD_DATA_PATH        | 新的基本面数据路径     |                            |      | data/raw/newdata/newgnsd.csv                                        |
+| K                         | 预测的数量             |                            | 整数 | 10                                                                  |
+| SAVE_FIGURE_PATH          | 预测的可视化图保存路径 |                            |      | reports/figures/kmeansCluster/ecmen                                 |
 
 
 #### 7.2.2 示例
 
 ```bash
-ipython src/prediction/predict.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz models/k-means/ecmen/dba/dba_16.pkl data/raw/newdata/newecmen.csv ecmen 10 reports/figures/kmeansCluster/ecmen
+ipython src/prediction/predict.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz models/k-means/ecmen/dba/dba_16.pkl data/raw/newdata/newecmen.csv ecmen data/processed/gnsdData/gnsd.csv data/raw/newdata/newgnsd.csv  10 reports/figures/kmeansCluster/ecmen
 ```
 
 如果使用默认参数可直接使用
