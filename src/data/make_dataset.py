@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from email.policy import default
 import logging
 import os
 from pathlib import Path

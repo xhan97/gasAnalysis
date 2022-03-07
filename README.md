@@ -109,7 +109,7 @@ pip install -r requirements.txt
 
 
 ```bash
-python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
+ipython src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
 ```
 
 #### 4.2.1 参数说明
@@ -126,13 +126,13 @@ python -u  src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPU
 #### 4.2.2 示例
 
 ```bash
-python -u  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz data/processed/Archive data/processed/WeatherData 2015
+ipython  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz data/processed/Archive data/processed/WeatherData 2015
 ```
 
 如使用默认参数可直接使用
 
 ```bash
-python -u  src/data/make_dataset.py
+ipython  src/data/make_dataset.py
 ```
 
 ## 5. 构建特征
@@ -146,7 +146,7 @@ python -u  src/data/make_dataset.py
 ### 5.2 运行方式
 
 ```bash
-python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
+ipython  src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
 ```
 #### 5.2.1 参数说明
 
@@ -163,13 +163,13 @@ python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH S
 #### 5.2.2 示例
 
 ```bash
-python -u src/features/build_features.py ecmen  data/processed/WeatherData/ecmen_weather_subclass.csv data/processed/Archive/cut_off_price.csv 06:00 16:00 1 data/processed/period 
+ipython src/features/build_features.py ecmen  data/processed/WeatherData/ecmen_weather_subclass.csv data/processed/Archive/cut_off_price.csv 06:00 16:00 1 data/processed/period 
 ```
 
 如使用默认参数可直接使用
 
 ```bash
-python -u src/features/build_features.py
+ipython src/features/build_features.py
 ```
 
 ## 6. 模型训练及可视化
@@ -182,7 +182,7 @@ python -u src/features/build_features.py
 ### 6.2 运行方式
 
 ```bash
-python -u src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH SAVE_FIGURE_PATH
+ipython  src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH SAVE_FIGURE_PATH
 ```
 
 #### 6.2.1 参数说明
@@ -197,12 +197,12 @@ python -u src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PAT
 #### 6.2.2 示例
 
 ```bash
-python -u src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz 16 models/k-means reports/figures/kmeansCluster
+ipython src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz 16 models/k-means reports/figures/kmeansCluster
 ```
 
 如果使用默认参数可直接使用
 ```bash
-python -u src/models/kmeans/train_model.py
+ipython src/models/kmeans/train_model.py
 ```
 
 ## 7. 预测

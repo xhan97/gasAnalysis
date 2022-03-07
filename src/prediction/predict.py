@@ -58,6 +58,17 @@ def load_data(data_path):
     return data
 
 
+def merge_gnsd(trained_data, gnsd_path):
+    trained_data.reset_index(inplace=True)
+    gnsd_data = pd.read_csv(gnsd_path, parse_dates=['date'])
+    trained_data['weather_public_date'] = trained_data['weather_public_time'].dt.date
+    gnsd_data['weather_public_date'] = gnsd_data['date'].dt.date
+    trained_data = trained_data.merge(gnsd_data, on='weather_public_date', how='inner').drop(
+        ['weather_public_date', 'date', 'weather_public_time'], axis=1)
+    trained_data.set_index("Trans_INIT_Time", inplace=True)
+    return trained_data
+
+
 def knn_fit_predict(data: pd.DataFrame, n_neighbors: int, new_data: pd.DataFrame):
     features = new_data.columns
     features = [fe for fe in features if fe in data.columns]
@@ -75,23 +86,6 @@ def knn_fit_predict(data: pd.DataFrame, n_neighbors: int, new_data: pd.DataFrame
     dist = kneig[0][0].tolist()
     neibors = dict(zip(neigbor_time, dist))
     return neibors
-
-
-def preprocess_new_data(weather_name, weather_path,):
-    if weather_name == 'ecmen':
-        weather = Ecmen(path=weather_path)
-    elif weather_name == 'ecmop':
-        weather = Ecmop(path=weather_path)
-    elif weather_name == 'gfsop':
-        weather = Gfsop(path=weather_path)
-    elif weather_name == 'gfsen':
-        weather = Gfsen(path=weather_path)
-    else:
-        raise NotImplementedError
-    new_data = weather.load_data().merge_data.transform_dst.get_delta.get_df()
-    new_data["Month"] = new_data["Trans_INIT_Time"].dt.month
-    new_data.set_index("Trans_INIT_Time", inplace=True)
-    return new_data
 
 
 def normalize_time(series):
@@ -135,12 +129,12 @@ def show_time_series(period_df: pd.DataFrame, label: int, km_model, kn_item: dic
     )
 
 
-def save_clustering_fig(km_model, n_clusters, merge_data, kn_item: dict, save_path):
+def save_clustering_fig(km_model, merge_data, kn_item: dict, save_path):
+    n_clusters = km_model.n_clusters
     plot_count = math.ceil(math.sqrt(n_clusters))
     fig, axs = plt.subplots(plot_count, plot_count, figsize=(20, 20))
     row_i = 0
     column_j = 0
-
     for i, label in enumerate(reversed(range(n_clusters))):
         show_time_series(period_df=merge_data, km_model=km_model, kn_item=kn_item,
                          label=label, ax_fig=axs[row_i, column_j])
@@ -154,14 +148,61 @@ def save_clustering_fig(km_model, n_clusters, merge_data, kn_item: dict, save_pa
                     bbox_inches="tight", orientation='landscape')
 
 
+def preprocess_new_weather_data(weather_name, weather_path):
+    if weather_name == 'ecmen':
+        weather = Ecmen(path=weather_path)
+    elif weather_name == 'ecmop':
+        weather = Ecmop(path=weather_path)
+    elif weather_name == 'gfsop':
+        weather = Gfsop(path=weather_path)
+    elif weather_name == 'gfsen':
+        weather = Gfsen(path=weather_path)
+    else:
+        raise NotImplementedError
+    new_weather_data = weather.load_data().merge_data.transform_dst.get_delta.get_df()
+    new_weather_data["Month"] = new_weather_data["Trans_INIT_Time"].dt.month
+    return new_weather_data
+
+
+def preprocess_new_gnsd_data(gnsd_path):
+    gnsd_data = pd.read_csv(gnsd_path, parse_dates=["date"])
+    return gnsd_data
+
+
+def preprocess_new_data(weather_name, weather_path, gnsd_path):
+    if os.path.exists(weather_path) and os.path.exists(gnsd_path):
+        new_weather_data = preprocess_new_weather_data(
+            weather_name, weather_path)
+        new_gnsd_data = preprocess_new_gnsd_data(gnsd_path)
+        new_weather_data['public_date'] = new_weather_data['Trans_INIT_Time'].dt.date
+        new_gnsd_data['public_date'] = new_gnsd_data['date'].dt.date
+        new_data = new_weather_data.merge(new_gnsd_data, on='public_date', how='inner').drop(
+            ['public_date', 'date'], axis=1)
+        new_data.set_index("Trans_INIT_Time", inplace=True)
+        return new_data
+    elif os.path.exists(weather_path):
+        new_weather_data = preprocess_new_weather_data(
+            weather_name, weather_path)
+        new_weather_data.set_index("Trans_INIT_Time", inplace=True)
+        return new_weather_data
+    elif os.path.exists(gnsd_path):
+        new_gnsd_data = preprocess_new_gnsd_data(gnsd_path)
+        new_gnsd_data.set_index("date", inplace=True)
+        return new_gnsd_data
+    else:
+        raise ValueError("one of weather_path and gnsd_path must be exist")
+
+
 @click.command()
 @click.argument('trained_data_path', default="data/processed/predict/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz", type=click.Path(exists=True))
 @click.argument('model_path', default='models/k-means/ecmen/dba/dba_16.pkl', type=click.Path(exists=True))
 @click.argument('new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path(exists=True))
 @click.argument('new_weather_data_name', default='ecmen')
+@click.argument('gnsd_historical_data_path', default='data/processed/gnsdData/gnsd.csv')
+@click.argument('new_gnsd_data_path', default='data/raw/newdata/newgnsd.csv', type=click.Path(exists=True))
 @click.argument('k', default=10)
 @click.argument('save_figure_path', default='reports/figures/kmeansCluster/ecmen')
-def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_name, k, save_figure_path):
+def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_name, gnsd_historical_data_path, new_gnsd_data_path, k, save_figure_path):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
@@ -170,13 +211,14 @@ def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_
     os.makedirs(save_figure_path, exist_ok=True)
 
     data = load_data(trained_data_path)
+    data = merge_gnsd(data, gnsd_historical_data_path)
 
     km_model = TimeSeriesKMeans.from_pickle(model_path)
     new_data = preprocess_new_data(
-        new_weather_data_name, new_weather_data_path)
+        new_weather_data_name, new_weather_data_path, new_gnsd_data_path)
     neibors = knn_fit_predict(data, k, new_data)
-    save_clustering_fig(km_model, 16, data, neibors, save_figure_path)
-    logger.info('predicted figure is saved in ' + save_figure_path)
+    save_clustering_fig(km_model, data, neibors, save_figure_path)
+    logger.info('predicted figure is saved in ' + save_figure_path + ' !')
 
 
 if __name__ == '__main__':

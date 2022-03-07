@@ -45,7 +45,7 @@ def dba_fit_data(n_cluster, ts_dataset):
 def dba_fit_predict_vwap(n_cluster, data, save_model_path=None):
     period_vwap = to_time_series_dataset(data["Normal_Vwap"].values)
     km_model = dba_fit_data(
-        n_cluster, period_vwap, save_model_path=save_model_path)
+        n_cluster, period_vwap)
     y_pred = km_model.predict(period_vwap)
     if save_model_path:
         file_name = "dba"+"_"+str(n_cluster)
@@ -66,21 +66,28 @@ def main(data_path, num_clusters, save_model_path, save_figure_path, save_data_p
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-    logger.info('training k-means model')
     os.makedirs(save_data_path, exist_ok=True)
 
     data = load_data(data_path)
     os.makedirs(save_model_path, exist_ok=True)
     os.makedirs(save_figure_path, exist_ok=True)
+
+    logger.info('training k-means model')
     dba_model, y_hat = dba_fit_predict_vwap(
         data=data, n_cluster=num_clusters, save_model_path=save_model_path)
     data["label"] = y_hat
+    data.set_index("Trans_INIT_Time", inplace=True)
+
     data_basename = os.path.basename(data_path)
-    data.to_pickle(os.path.join(save_data_path, data_basename[:-7]+"_label"+".pkl.gz"),comprehension='gzip')
+    train_path = os.path.join(
+        save_data_path, data_basename[:-7]+"_label"+".pkl.gz")
+    data.to_pickle(train_path, compression='gzip')
+    logger.info('trained data is saved in ' + train_path + " !")
 
     logger.info('Visualizing clusters of k-means')
     show_clustering(km_model=dba_model, n_clusters=num_clusters,
                     merge_data=data, save_path=save_figure_path)
+    logger.info('figure is saved in ' + save_figure_path+ " !")
 
 
 if __name__ == '__main__':
