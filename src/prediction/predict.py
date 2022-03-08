@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from dotenv import find_dotenv, load_dotenv
+from matplotlib.gridspec import GridSpec
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
 from src.data.weather.ecmen import Ecmen
@@ -69,7 +70,7 @@ def merge_gnsd(trained_data, gnsd_path):
     return trained_data
 
 
-def knn_fit_predict(data: pd.DataFrame, n_neighbors: int, new_data: pd.DataFrame):
+def get_neibors(data: pd.DataFrame, n_neighbors: int, new_data: pd.DataFrame):
     features = new_data.columns
     features = [fe for fe in features if fe in data.columns]
     trans = MinMaxScaler()
@@ -79,13 +80,20 @@ def knn_fit_predict(data: pd.DataFrame, n_neighbors: int, new_data: pd.DataFrame
     x_train = trans.fit_transform(x_train)
     y_train = data['label']
     knc.fit(x_train, y_train)
+
     x = new_data[features]
     x = trans.transform(x)
     kneig = knc.kneighbors(x, return_distance=True)
     neigbor_time = data.index[kneig[1][0]].tolist()
     dist = kneig[0][0].tolist()
+    neibors_vwap = data.loc[neigbor_time]['Normal_Vwap'].apply(lambda x: x[-1])
     neibors = dict(zip(neigbor_time, dist))
-    return neibors
+    return neibors, neibors_vwap
+
+
+def get_neibors_values(data: pd.DataFrame, neibors: dict):
+
+    neibors_times = neibors.keys.tolist()
 
 
 def normalize_time(series):
@@ -129,19 +137,24 @@ def show_time_series(period_df: pd.DataFrame, label: int, km_model, kn_item: dic
     )
 
 
-def save_clustering_fig(km_model, merge_data, kn_item: dict, save_path):
+def save_clustering_fig(km_model, merge_data, kn_item: dict, neibors_vwap, save_path):
+    fig = plt.figure(figsize=(40, 30))
     n_clusters = km_model.n_clusters
     plot_count = math.ceil(math.sqrt(n_clusters))
-    fig, axs = plt.subplots(plot_count, plot_count, figsize=(20, 20))
+    gs = GridSpec(plot_count, plot_count+1, figure=fig)
     row_i = 0
     column_j = 0
     for i, label in enumerate(reversed(range(n_clusters))):
+        ax = fig.add_subplot(gs[row_i, column_j])
         show_time_series(period_df=merge_data, km_model=km_model, kn_item=kn_item,
-                         label=label, ax_fig=axs[row_i, column_j])
+                         label=label, ax_fig=ax)
         column_j += 1
         if column_j % plot_count == 0:
             row_i += 1
             column_j = 0
+    ax = fig.add_subplot(gs[1:3, -1])
+    sns.violinplot(data=neibors_vwap, ax=ax)
+    ax.set_title('Distribution  of  the last vwap of black line')
     if save_path:
         os.makedirs(save_path,  exist_ok=True)
         plt.savefig(os.path.join(save_path, "predict.pdf"),
@@ -196,10 +209,10 @@ def preprocess_new_data(weather_name, weather_path, gnsd_path):
 @click.command()
 @click.argument('trained_data_path', default="data/processed/predict/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz", type=click.Path(exists=True))
 @click.argument('model_path', default='models/k-means/ecmen/dba/dba_16.pkl', type=click.Path(exists=True))
-@click.argument('new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path(exists=True))
+@click.argument('new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path())
 @click.argument('new_weather_data_name', default='ecmen')
 @click.argument('gnsd_historical_data_path', default='data/processed/gnsdData/gnsd.csv')
-@click.argument('new_gnsd_data_path', default='data/raw/newdata/newgnsd.csv', type=click.Path(exists=True))
+@click.argument('new_gnsd_data_path', default='data/raw/newdata/newgnsd.csv', type=click.Path())
 @click.argument('k', default=10)
 @click.argument('save_figure_path', default='reports/figures/kmeansCluster/ecmen')
 def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_name, gnsd_historical_data_path, new_gnsd_data_path, k, save_figure_path):
@@ -216,8 +229,10 @@ def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_
     km_model = TimeSeriesKMeans.from_pickle(model_path)
     new_data = preprocess_new_data(
         new_weather_data_name, new_weather_data_path, new_gnsd_data_path)
-    neibors = knn_fit_predict(data, k, new_data)
-    save_clustering_fig(km_model, data, neibors, save_figure_path)
+    neibors, neibors_vwap = get_neibors(data, k, new_data)
+
+    save_clustering_fig(km_model, data, neibors,
+                        neibors_vwap, save_figure_path)
     logger.info('predicted figure is saved in ' + save_figure_path + ' !')
 
 
