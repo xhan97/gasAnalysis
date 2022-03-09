@@ -12,26 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tslearn.clustering import TimeSeriesKMeans
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import KNeighborsClassifier
+from matplotlib.gridspec import GridSpec
+from dotenv import find_dotenv, load_dotenv
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+import click
 import logging
 import math
 import os
+import sys
 from pathlib import Path
 
-import click
-import matplotlib
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-from dotenv import find_dotenv, load_dotenv
-from matplotlib.gridspec import GridSpec
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import MinMaxScaler
-from src.data.weather.ecmen import Ecmen
-from src.data.weather.ecmop import Ecmop
-from src.data.weather.gfsen import Gfsen
-from src.data.weather.gfsop import Gfsop
-from tslearn.clustering import TimeSeriesKMeans
-
+sys.path.append('src')
+from data.weather.gfsop import Gfsop
+from data.weather.gfsen import Gfsen
+from data.weather.ecmop import Ecmop
+from data.weather.ecmen import Ecmen
 
 def lighten_color(color, amount=0.5):
     """
@@ -207,14 +208,14 @@ def preprocess_new_data(weather_name, weather_path, gnsd_path):
 
 
 @click.command()
-@click.argument('trained_data_path', default="data/processed/predict/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz", type=click.Path(exists=True))
-@click.argument('model_path', default='models/k-means/ecmen/dba/dba_16.pkl', type=click.Path(exists=True))
-@click.argument('new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path())
-@click.argument('new_weather_data_name', default='ecmen')
-@click.argument('gnsd_historical_data_path', default='data/processed/gnsdData/gnsd.csv')
-@click.argument('new_gnsd_data_path', default='data/raw/newdata/newgnsd.csv', type=click.Path())
-@click.argument('k', default=10)
-@click.argument('save_figure_path', default='reports/figures/kmeansCluster/ecmen')
+@click.option('--trained_data_path', default="data/processed/predict/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz", type=click.Path(exists=True))
+@click.option('--model_path', default='models/k-means/ecmen/dba/dba_16.pkl', type=click.Path(exists=True))
+@click.option('--new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path())
+@click.option('--new_weather_data_name', default='ecmen')
+@click.option('--gnsd_historical_data_path', default='data/processed/gnsdData/gnsd.csv')
+@click.option('--new_gnsd_data_path', default='data/raw/newdata/newgnsd.csv', type=click.Path())
+@click.option('--k', default=10)
+@click.option('--save_figure_path', default='reports/figures/kmeansCluster/ecmen')
 def main(trained_data_path, model_path, new_weather_data_path, new_weather_data_name, gnsd_historical_data_path, new_gnsd_data_path, k, save_figure_path):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).

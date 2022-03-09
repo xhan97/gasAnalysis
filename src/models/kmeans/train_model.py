@@ -18,10 +18,13 @@ from tslearn.clustering import TimeSeriesKMeans
 import logging
 from pathlib import Path
 
+import sys
+sys.path.append('src')
+
 import click
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
-from src.visualization.clustering import show_clustering
+from visualization.clustering import show_clustering
 
 
 def load_data(data_path):
@@ -56,11 +59,11 @@ def dba_fit_predict_vwap(n_cluster, data, save_model_path=None):
 
 
 @click.command()
-@click.argument('data_path', default='data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz', type=click.Path(exists=True))
-@click.argument('num_clusters', default=16, type=click.INT)
-@click.argument('save_model_path', default='models/k-means/ecmen')
-@click.argument('save_figure_path', default='reports/figures/kmeansCluster/ecmen')
-@click.argument('save_data_path', default='data/processed/predict/ecmen/06_00_13_40')
+@click.option('--data_path', default='data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz', type=click.Path(exists=True))
+@click.option('--num_clusters', default=16, type=click.INT)
+@click.option('--save_model_path', default='models/k-means/ecmen')
+@click.option('--save_figure_path', default='reports/figures/kmeansCluster/ecmen')
+@click.option('--save_data_path', default='data/processed/predict/ecmen/06_00_13_40')
 def main(data_path, num_clusters, save_model_path, save_figure_path, save_data_path):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).

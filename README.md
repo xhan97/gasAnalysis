@@ -127,15 +127,25 @@ ipython src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_P
 #### 4.2.2 示例
 
 ```bash
-ipython  src/data/make_dataset.py data/raw/Archive ecmen data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz data/processed/Archive data/processed/WeatherData 2015
+python -u  src/data/make_dataset.py `
+    --archive_input_path=data/raw/Archive `
+    --weather_name=ecmen `
+    --weather_input_path=data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz `
+    --archive_output_path=data/processed/Archive `
+    --weather_output_path=data/processed/WeatherData `
+    --start_year=2015
 ```
 
 如使用默认参数可直接使用
 
 ```bash
-ipython  src/data/make_dataset.py
+python -u src/data/make_dataset.py
 ```
 
+可单独设置一些参数设置，其他采用默认设置，如设置 start_year 为2020
+```bash
+python -u src/data/make_dataset.py --start_year=2020
+```
 ## 5. 构建特征
 
 ### 5.1 模块功能
@@ -147,7 +157,7 @@ ipython  src/data/make_dataset.py
 ### 5.2 运行方式
 
 ```bash
-ipython  src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
+python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH START_TIME END_TIME USING_PERIOD OUTPUT_DIR 
 ```
 #### 5.2.1 参数说明
 
@@ -164,13 +174,26 @@ ipython  src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH ST
 #### 5.2.2 示例
 
 ```bash
-ipython src/features/build_features.py ecmen  data/processed/WeatherData/ecmen_weather_subclass.csv data/processed/Archive/cut_off_price.csv 06:00 16:00 1 data/processed/period 
+python -u src/features/build_features.py `
+--weather_name=ecmen `
+--weather_path=data/processed/WeatherData/ecmen_weather_subclass.csv `
+--cutoff_path=data/processed/Archive/cut_off_price.csv `
+--start_time=06:00 `
+--end_time=16:00 `
+--using_period=1 `
+--output_dir=data/processed/period 
 ```
 
 如使用默认参数可直接使用
 
 ```bash
-ipython src/features/build_features.py
+python -u src/features/build_features.py
+```
+
+可单独设置一些参数设置，其他采用默认设置，如设置 end_time 为 15:00
+
+```bash
+python -u src/features/build_features.py --end_time=15:00
 ```
 
 ## 6. 模型训练及可视化
@@ -183,7 +206,7 @@ ipython src/features/build_features.py
 ### 6.2 运行方式
 
 ```bash
-ipython  src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH SAVE_FIGURE_PATH
+python -u  src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH SAVE_FIGURE_PATH SAVE_DATA_PATH
 ```
 
 #### 6.2.1 参数说明
@@ -194,16 +217,33 @@ ipython  src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PATH
 | NUM_CLUSTERS     | 聚类数量             |        |      | 16                                                            |
 | SAVE_MODEL_PATH  | 模型保存路径         |        |      | models/k-means                                                |
 | SAVE_FIGURE_PATH | 聚类可视化图保存路径 |        |      | reports/figures/kmeansCluster                                 |
+| SAVE_DATA_PATH   | 聚类可视化图保存路径 |        |      | data/processed/predict/ecmen/06_00_13_40                      |
 
 #### 6.2.2 示例
 
 ```bash
-ipython src/models/kmeans/train_model.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz 16 models/k-means reports/figures/kmeansCluster
+python -u src/models/kmeans/train_model.py `
+    --data_path=data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz `
+    --num_clusters=16 `
+    --save_model_path=models/k-means `
+    --save_figure_path=reports/figures/kmeansCluster `
+    --save_data_path=data/processed/predict/ecmen/06_00_13_40
+```
+
+查看和使用所有可用配置：
+
+```bash
+python -u  src/models/kmeans/train_model.py --help
 ```
 
 如果使用默认参数可直接使用
 ```bash
-ipython src/models/kmeans/train_model.py
+python -u src/models/kmeans/train_model.py
+```
+
+可单独设置一些参数设置，其他采用默认设置，如设置num_clusters 为 20：
+```bash
+python -u src/models/kmeans/train_model.py --num_clusters=20
 ```
 
 ## 7. 预测
@@ -238,7 +278,7 @@ ipython src/models/kmeans/train_model.py
 ### 7.2 运行方式
 
 ```bash
-ipython TRAIND_DATA_PATH MODEL_PATH NEW_WEATHER_PATH NEW_WEATHER_NAME GNSD_HISTORICAL_DATA_PATH NEW_GNSD_DATA_PATH  K  SAVE_FIGURE_PATH
+python -u src/prediction/predict.py TRAIND_DATA_PATH MODEL_PATH NEW_WEATHER_PATH NEW_WEATHER_NAME GNSD_HISTORICAL_DATA_PATH NEW_GNSD_DATA_PATH  K  SAVE_FIGURE_PATH
 ```
 
 #### 7.2.1 参数说明
@@ -258,12 +298,31 @@ ipython TRAIND_DATA_PATH MODEL_PATH NEW_WEATHER_PATH NEW_WEATHER_NAME GNSD_HISTO
 #### 7.2.2 示例
 
 ```bash
-ipython src/prediction/predict.py data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz models/k-means/ecmen/dba/dba_16.pkl data/raw/newdata/newecmen.csv ecmen data/processed/gnsdData/gnsd.csv data/raw/newdata/newgnsd.csv  10 reports/figures/kmeansCluster/ecmen
+python -u src/prediction/predict.py `
+      --trained_data_path=data/processed/period/ecmen/06_00_13_40/ecmen_period_1_label.pkl.gz `
+      --model_path=models/k-means/ecmen/dba/dba_16.pkl `
+      --new_weather_data_path=data/raw/newdata/newecmen.csv `
+      --new_weather_data_name=ecmen `
+      --gnsd_historical_data_path=data/processed/gnsdData/gnsd.csv `
+      --new_gnsd_data_path=data/raw/newdata/newgnsd.csv `
+      --k=10 `
+      --save_figure_path=reports/figures/kmeansCluster/ecmen
 ```
 
-如果使用默认参数可直接使用
+查看和使用所有可用配置：
+
+```
+python -u src/prediction/predict.py --help
+```
+
+如果使用默认参数可直接使用：
 ```bash
-ipython src/prediction/predict.py
+python -u src/prediction/predict.py
+```
+
+可单独设置一些参数设置，其他采用默认设置，如设置 k 为 20：
+```bash
+python -u src/prediction/predict.py --k=20
 ```
 
 <!-- ## 8. 使用 app

@@ -9,4 +9,3 @@ scipy==1.7.1
 seaborn==0.11.2
 setuptools==58.0.4
 tslearn==0.5.2
-ipython

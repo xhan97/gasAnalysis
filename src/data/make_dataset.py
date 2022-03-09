@@ -42,12 +42,12 @@ def make_weather(weather_name, weather_path, st_date, out_path):
 
 
 @click.command()
-@click.argument('archive_input_path', default='data/raw/Archive', type=click.Path(exists=True))
-@click.argument('weather_name', default='ecmen')
-@click.argument('weather_input_path', default='data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz', type=click.Path(exists=True))
-@click.argument('archive_output_path', default='data/processed/Archive', type=click.Path())
-@click.argument('weather_output_path', default='data/processed/WeatherData', type=click.Path())
-@click.argument('start_year', default='2015')
+@click.option('--archive_input_path', default='data/raw/Archive', type=click.Path(exists=True))
+@click.option('--weather_name', default='ecmen')
+@click.option('--weather_input_path', default='data/raw/WeatherData/ECMEN_WDD_Forecasts_20100101_20210331.csv.gz', type=click.Path(exists=True))
+@click.option('--archive_output_path', default='data/processed/Archive', type=click.Path())
+@click.option('--weather_output_path', default='data/processed/WeatherData', type=click.Path())
+@click.option('--start_year', default='2015')
 def main(start_year, archive_input_path, archive_output_path, weather_name, weather_input_path, weather_output_path):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).

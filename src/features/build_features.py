@@ -26,13 +26,13 @@ from period_weather import make_period_cutoff
 
 
 @click.command()
-@click.argument('weather_name', default='ecmen')
-@click.argument('weather_path', default='data/processed/WeatherData/ecmen_weather_subclass.csv', type=click.Path(exists=True))
-@click.argument('cutoff_path', default='data/processed/Archive/cut_off_price.csv', type=click.Path(exists=True))
-@click.argument('start_time', default='6:00')
-@click.argument('end_time', default='16:00')
-@click.argument('using_period', default=1, type=click.INT)
-@click.argument('output_dir', default='data/processed/period', type=click.Path())
+@click.option('--weather_name', default='ecmen')
+@click.option('--weather_path', default='data/processed/WeatherData/ecmen_weather_subclass.csv', type=click.Path(exists=True))
+@click.option('--cutoff_path', default='data/processed/Archive/cut_off_price.csv', type=click.Path(exists=True))
+@click.option('--start_time', default='6:00')
+@click.option('--end_time', default='16:00')
+@click.option('--using_period', default=1, type=click.INT)
+@click.option('--output_dir', default='data/processed/period', type=click.Path())
 def main(weather_name, weather_path, cutoff_path, start_time, end_time, using_period, output_dir):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
