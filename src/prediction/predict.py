@@ -212,7 +212,7 @@ def preprocess_new_data(weather_name, weather_path, gnsd_path):
 @click.option('--model_path', default='models/k-means/ecmen/dba/dba_16.pkl', type=click.Path(exists=True))
 @click.option('--new_weather_data_path', default='data/raw/newdata/newecmen.csv', type=click.Path())
 @click.option('--new_weather_data_name', default='ecmen')
-@click.option('--gnsd_historical_data_path', default='data/processed/gnsdData/gnsd.csv')
+@click.option('--gnsd_historical_data_path', default='data/processed/gnsdData/gnsd.csv', type=click.Path())
 @click.option('--new_gnsd_data_path', default='data/raw/newdata/newgnsd.csv', type=click.Path())
 @click.option('--k', default=10)
 @click.option('--save_figure_path', default='reports/figures/kmeansCluster/ecmen')
