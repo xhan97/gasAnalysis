@@ -110,7 +110,7 @@ pip install -r requirements.txt
 
 
 ```bash
-ipython src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
+python -u src/data/make_dataset.py ARCHIVE_INPUT_PATH WEATHER_NAME WEATHER_INPUT_PATH ARCHIVE_OUTPUT_PATH WEATHER_OUTPUT_PATH START_YEAR
 ```
 
 #### 4.2.1 参数说明
@@ -175,13 +175,13 @@ python -u src/features/build_features.py WEATHER_NAME WEATHER_PATH CUTOFF_PATH S
 
 ```bash
 python -u src/features/build_features.py `
---weather_name=ecmen `
---weather_path=data/processed/WeatherData/ecmen_weather_subclass.csv `
---cutoff_path=data/processed/Archive/cut_off_price.csv `
---start_time=06:00 `
---end_time=16:00 `
---using_period=1 `
---output_dir=data/processed/period 
+      --weather_name=ecmen `
+      --weather_path=data/processed/WeatherData/ecmen_weather_subclass.csv `
+      --cutoff_path=data/processed/Archive/cut_off_price.csv `
+      --start_time=06:00 `
+      --end_time=16:00 `
+      --using_period=1 `
+      --output_dir=data/processed/period 
 ```
 
 如使用默认参数可直接使用
@@ -223,11 +223,11 @@ python -u  src/models/kmeans/train_model.py DATA_PATH NUM_CLUSTERS SAVE_MODEL_PA
 
 ```bash
 python -u src/models/kmeans/train_model.py `
-    --data_path=data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz `
-    --num_clusters=16 `
-    --save_model_path=models/k-means `
-    --save_figure_path=reports/figures/kmeansCluster `
-    --save_data_path=data/processed/predict/ecmen/06_00_13_40
+      --data_path=data/processed/period/ecmen/06_00_13_40/ecmen_period_1.pkl.gz `
+      --num_clusters=16 `
+      --save_model_path=models/k-means `
+      --save_figure_path=reports/figures/kmeansCluster `
+      --save_data_path=data/processed/predict/ecmen/06_00_13_40
 ```
 
 查看和使用所有可用配置：
@@ -257,8 +257,8 @@ python -u src/models/kmeans/train_model.py --num_clusters=20
 #### 7.1.1 运行说明
 
 - 数据输入：
-    a. 新天气数据：是指定气象站发布的一日天气数据；
-    b. 新基本面数据：是发布的基本面一日的数据；
+  - 新天气数据：是指定气象站发布的一日天气数据；
+  - 新基本面数据：是发布的基本面一日的数据；
 - 输入方式：
   - 以文件的方式传入运行，用户可参考 data\raw\newdata 目录下 newecmen.csv 和 newgnsd.csv 的示例文件内容分别建造要预测的天气数据和基本面数据；
 - 输入选择：
