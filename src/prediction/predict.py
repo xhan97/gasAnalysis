@@ -92,40 +92,30 @@ def get_neibors(data: pd.DataFrame, n_neighbors: int, new_data: pd.DataFrame):
     return neibors, neibors_vwap
 
 
-def get_neibors_values(data: pd.DataFrame, neibors: dict):
-
-    neibors_times = neibors.keys.tolist()
-
-
 def normalize_time(series):
     series = pd.to_datetime(series, format="%H:%M:%S").to_series()
     series += pd.to_timedelta(series.lt(series.shift()).cumsum(), unit="D")
     return series.values
 
 
-def show_time_series(period_df: pd.DataFrame, label: int, km_model, kn_item: dict, ax_fig):
+def show_time_series(period_df: pd.DataFrame, label: int, km_model, kn_date: dict, ax_fig):
     max_index = []
-    k = kn_item.keys()
+    k = kn_date.keys()
     i = 0
     dark_color = 'black'
-    normal_color = [0.7, 0.8, 0.8]
 
     label_period = period_df[period_df["label"]
                              == label][["Normal_Vwap", "Trade_time"]]
     index_list = label_period.index.to_list()
     neibor_index = {index_list.index(
-        item): kn_item[item] for item in k if item in index_list}
+        item): kn_date[item] for item in k if item in index_list}
     for Normal_Vwap, Trade_time in label_period.values:
         Trade_time = normalize_time(Trade_time)
         if len(Trade_time) > len(max_index):
             max_index = Trade_time
         if i in neibor_index.keys():
-            # sns.lineplot(x=Trade_time, y=Normal_Vwap, color=lighten_color(
-            # dark_color, neibor_index[i]), linewidth = 2, ax=ax_fig)
             sns.lineplot(x=Trade_time, y=Normal_Vwap,
                          color=dark_color, linewidth=1, ax=ax_fig)
-        # sns.lineplot(x=Trade_time, y=Normal_Vwap,
-        #              color=normal_color, ax=ax_fig)
         i += 1
 
     center_df = pd.DataFrame(
@@ -137,8 +127,27 @@ def show_time_series(period_df: pd.DataFrame, label: int, km_model, kn_item: dic
         matplotlib.dates.DateFormatter("%H:%M")
     )
 
+def show_neibor_date(kn_date: dict, ax_fig):
+    neibor_date = [k.strftime('%m/%d/%Y') for k in kn_date.keys() ]
+    neibor_dist = ['%1.2f'% (v) for v in kn_date.values()]
+    cell_text = list(zip(neibor_date, neibor_dist))
+    table = ax_fig.table( 
+    cellText = cell_text,  
+    rowLabels = list(range(len(kn_date))),  
+    colLabels = ['Date','Distance'], 
+    rowColours =["palegreen"] * len(kn_date),  
+    colColours =["palegreen"] * 2, 
+    cellLoc ='center',  
+    loc ='best')
+    ax_fig.set_axis_off()
+    ax_fig.set_title('Date and Distance of black lines', 
+             fontweight ="bold")
 
-def save_clustering_fig(km_model, merge_data, kn_item: dict, neibors_vwap, save_path):
+def show_neibor_vwap_dist(data, ax_fig):
+    sns.violinplot(data=data, ax=ax_fig)
+    ax_fig.set_title('Distribution  of  the last vwap of black lines', fontweight ="bold")
+
+def save_clustering_fig(km_model, merge_data, kn_date: dict, neibors_vwap, save_path):
     fig = plt.figure(figsize=(40, 30))
     n_clusters = km_model.n_clusters
     plot_count = math.ceil(math.sqrt(n_clusters))
@@ -147,15 +156,17 @@ def save_clustering_fig(km_model, merge_data, kn_item: dict, neibors_vwap, save_
     column_j = 0
     for i, label in enumerate(reversed(range(n_clusters))):
         ax = fig.add_subplot(gs[row_i, column_j])
-        show_time_series(period_df=merge_data, km_model=km_model, kn_item=kn_item,
+        show_time_series(period_df=merge_data, km_model=km_model, kn_date=kn_date,
                          label=label, ax_fig=ax)
         column_j += 1
         if column_j % plot_count == 0:
             row_i += 1
             column_j = 0
-    ax = fig.add_subplot(gs[1:3, -1])
-    sns.violinplot(data=neibors_vwap, ax=ax)
-    ax.set_title('Distribution  of  the last vwap of black line')
+    ax = fig.add_subplot(gs[0:2, -1])
+    show_neibor_vwap_dist(data=neibors_vwap, ax_fig=ax)
+    
+    ax = fig.add_subplot(gs[2:,-1])
+    show_neibor_date(kn_date, ax_fig=ax)
     if save_path:
         os.makedirs(save_path,  exist_ok=True)
         plt.savefig(os.path.join(save_path, "predict.pdf"),
